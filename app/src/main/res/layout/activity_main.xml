@@ -7,5 +7,46 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <!-- Верхний контейнер -->
+    <LinearLayout
+        android:id="@+id/top_menu"
+        android:layout_width="0dp"
+        android:layout_height="70dp"
+        android:background="#8BC34A"
+        android:orientation="vertical"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+
+
+    <!-- Контейнер для кнопок, размещенный по центру -->
+    <LinearLayout
+        android:id="@+id/menu_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="50dp"
+        android:layout_marginStart="50dp"
+        android:layout_marginEnd="50dp"
+        android:layout_marginBottom="50dp"
+        android:orientation="vertical"
+        android:background="#1FAB9E"
+        app:layout_constraintTop_toBottomOf="@+id/top_menu"
+        app:layout_constraintBottom_toTopOf="@+id/bottom_menu"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+
+    <!-- Нижний контейнер -->
+    <LinearLayout
+        android:id="@+id/bottom_menu"
+        android:layout_width="0dp"
+        android:layout_height="70dp"
+        android:background="#673AB7"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
