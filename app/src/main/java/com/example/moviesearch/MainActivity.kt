@@ -7,6 +7,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
 
@@ -14,53 +16,45 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Вызываем метод для инициализации кнопок
-        initMenuButtons()
-    }
-
-    private fun initMenuButtons() {
-        // Находим кнопку по id
-        val button1 = findViewById<Button>(R.id.button1)
-        // Устанавливаем обработчик нажатий
-        button1.setOnClickListener {
-            // Показываем Toast-сообщение
-            Toast.makeText(this, "Меню", Toast.LENGTH_SHORT).show()
-        }
-
-        // Находим кнопку по id
-        val button2 = findViewById<Button>(R.id.button2)
-        // Устанавливаем обработчик нажатий
-        button2.setOnClickListener {
-            // Показываем Toast-сообщение
-            Toast.makeText(this, "Избранное", Toast.LENGTH_SHORT).show()
+        // Инициализация BottomNavigationView
+        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation)
 
 
-            // Находим кнопку по id
-            val button3 = findViewById<Button>(R.id.button3)
-            // Устанавливаем обработчик нажатий
-            button3.setOnClickListener {
-                // Показываем Toast-сообщение
-                Toast.makeText(this, "Посмотреть позже", Toast.LENGTH_SHORT).show()
+        bottomNavigationView.setOnItemSelectedListener() { item ->
+            when (item.itemId) {
+                R.id.favorites -> {
+                    Toast.makeText(this, "Избранное", Toast.LENGTH_SHORT).show()
+                    true
+                }
 
-            }
+                R.id.watch_later -> {
+                    Toast.makeText(this, "Посмотреть позже", Toast.LENGTH_SHORT).show()
+                    true
+                }
 
-            // Находим кнопку по id
-            val button4 = findViewById<Button>(R.id.button4)
-            // Устанавливаем обработчик нажатий
-            button4.setOnClickListener {
-                // Показываем Toast-сообщение
-                Toast.makeText(this, "Подборки", Toast.LENGTH_SHORT).show()
+                R.id.selections -> {
+                    Toast.makeText(this, "Подборки", Toast.LENGTH_SHORT).show()
+                    true
+                }
 
-            }
-
-            // Находим кнопку по id
-            val button5 = findViewById<Button>(R.id.button5)
-            // Устанавливаем обработчик нажатий
-            button5.setOnClickListener {
-                // Показываем Toast-сообщение
-                Toast.makeText(this, "Настройки", Toast.LENGTH_SHORT).show()
-
+                else -> false
             }
         }
+
+        // Инициализация ToolBar
+        val topAppBar = findViewById<MaterialToolbar>(R.id.app_bar_layout)
+
+        topAppBar.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.settings -> {
+                    Toast.makeText(this, "Настройки", Toast.LENGTH_SHORT).show()
+                    true
+
+                }
+
+                else -> false
+            }
+        }
+
     }
 }
