@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Movie Search</string>
+    <string name="disclaimer">Pictures taken from https://www.movieposters.com/</string>
+    <string name="btn_menu1">Menu</string>
+    <string name="btn_menu2">" Favorites"</string>
+    <string name="btn_menu3">" Watch later"</string>
+    <string name="btn_menu4">" Collections"</string>
+    <string name="btn_menu5">" Nastroyki Settings"</string>
+    <string name="page_title">Search it!</string>
+</resources>

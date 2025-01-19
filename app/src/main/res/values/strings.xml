@@ -6,5 +6,7 @@
     <string name="btn_menu3">Посмотреть позже</string>
     <string name="btn_menu4">Подборки</string>
     <string name="btn_menu5">Настройки</string>
+    <string name="page_title">Search it!</string>
+
 
 </resources>
