@@ -13,4 +13,13 @@
         <item name="android:backgroundTint">@color/button</item>
     </style>
 
+
+    <style name="tool_bar" parent="Widget.MaterialComponents.BottomNavigationView">
+        <item name="backgroundTint">@color/colorPrimaryDark</item>
+        <item name="itemBackground">@android:color/transparent</item>
+        <item name="itemRippleColor">@android:color/transparent</item> <!--Убираем фон у иконок-->
+        <item name="itemIconTint">@color/white</item>
+        <item name="itemTextColor">@color/white</item>
+    </style>
+
 </resources>

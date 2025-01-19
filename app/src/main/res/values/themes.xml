@@ -2,6 +2,7 @@
     <!-- Base application theme. -->
     <style name="Base.Theme.MovieSearch" parent="Theme.Material3.Dark.NoActionBar">
         <!-- Цвета -->
+        <item name="itemBackground">@android:color/transparent</item>
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorOnPrimary">@color/colorPrimaryDark</item>
 

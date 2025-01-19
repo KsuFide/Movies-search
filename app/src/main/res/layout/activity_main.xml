@@ -11,8 +11,10 @@
     <!-- Toolbar верхнее меню -->
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout2"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
 
@@ -29,13 +31,16 @@
     <!-- Верхний контейнер -->
     <androidx.cardview.widget.CardView
         android:id="@+id/top_menu"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="100dp"
         android:layout_margin="10dp"
+        android:layout_marginStart="9dp"
+        android:layout_marginEnd="9dp"
         android:elevation="5dp"
         app:cardCornerRadius="15dp"
-        app:layout_constraintTop_toBottomOf="@+id/appBarLayout2"
-        tools:layout_editor_absoluteX="10dp">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/appBarLayout2">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -43,7 +48,7 @@
             android:orientation="horizontal">
 
             <ImageView
-                android:id="@+id/poster1"
+                android:id="@+id/film1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -51,7 +56,7 @@
                 app:srcCompat="@drawable/jurassic_park" />
 
             <ImageView
-                android:id="@+id/poster2"
+                android:id="@+id/film2"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -59,7 +64,7 @@
                 app:srcCompat="@drawable/spider_man" />
 
             <ImageView
-                android:id="@+id/poster3"
+                android:id="@+id/film3"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -67,7 +72,7 @@
                 app:srcCompat="@drawable/the_mummy" />
 
             <ImageView
-                android:id="@+id/poster4"
+                android:id="@+id/film4"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -75,18 +80,19 @@
                 app:srcCompat="@drawable/wolf_man" />
 
             <ImageView
-                android:id="@+id/poster5"
+                android:id="@+id/film5"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:scaleType="centerCrop"
-                app:srcCompat="@drawable/star_wars" />
+                app:srcCompat="@drawable/flash" />
 
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
 
     <TextView
+        android:id="@+id/disclaimer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -97,19 +103,116 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/top_menu" />
 
-    <!-- BottomNavigationView нижнее меню -->
+    <!-- Постеры -->
 
+    <GridLayout
+        android:id="@+id/gridLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:columnCount="2"
+        android:layoutAnimation="@anim/layout_anim"
+        android:orientation="horizontal"
+        android:useDefaultMargins="true"
+        app:layout_constraintBottom_toTopOf="@+id/bottom_navigation"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/disclaimer">
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/poster_1"
+            android:layout_width="150dp"
+            android:layout_height="200dp"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardCornerRadius="15dp">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/avengers" />
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/poster_2"
+            android:layout_width="150dp"
+            android:layout_height="200dp"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardCornerRadius="15dp">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/toy_story" />
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/poster_3"
+            android:layout_width="150dp"
+            android:layout_height="200dp"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardCornerRadius="15dp">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/moana2" />
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/poster_4"
+            android:layout_width="150dp"
+            android:layout_height="200dp"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardCornerRadius="15dp">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/harry_potter" />
+        </androidx.cardview.widget.CardView>
+
+    </GridLayout>
+
+    <!-- BottomNavigationView нижнее меню -->
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_navigation"
-        android:layout_width="match_parent"
+        style="@style/tool_bar"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@color/colorPrimaryDark"
+        app:itemBackground="@android:color/transparent"
         app:itemIconTint="@color/white"
         app:itemTextColor="@color/white"
         app:labelVisibilityMode="labeled"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:menu="@menu/menu_navigation" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="411dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintGuide_begin="20dp"
+        app:layout_constraintStart_toEndOf="@+id/appBarLayout2" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="20dp" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
