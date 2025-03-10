@@ -9,31 +9,38 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.moviesearch.databinding.ActivityMainBinding
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityMainBinding
+    private lateinit var filmsAdapter: FilmListRecyclerAdapter
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
 
+        // binding
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        // Анимация с использованием ObjectAnimator
-        // Найдём постеры
-        val poster1 = findViewById<CardView>(R.id.poster_1)
-        val poster2 = findViewById<CardView>(R.id.poster_2)
-        val poster3 = findViewById<CardView>(R.id.poster_3)
-        val poster4 = findViewById<CardView>(R.id.poster_4)
-
-        // Применяем анимацию и обработчик кликов к каждому постеру
-        listOf(poster1, poster2, poster3, poster4).forEach { poster ->
-            setupPosterClick(poster)
+        binding.mainRecycler.apply {
+            layoutManager = LinearLayoutManager(this@MainActivity)
+            adapter = filmsAdapter
+            addItemDecoration(TopSpacingItemDecoration(8))
         }
+
+//        val filmsDataBase = listOf(
+//            Film("Film title", R.drawable.poster, "This should be a description"),
+//            Film(...),
+//        ...
+//        )
 
 
         // Инициализация BottomNavigationView
-        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation)
+        val bottomNavigationView = binding.bottomNavigation
         // Установка активного и неактивного цветов программно
         val colorStates = ColorStateList(
             arrayOf(
@@ -44,6 +51,7 @@ class MainActivity : AppCompatActivity() {
                 ContextCompat.getColor(this, R.color.white), // Активный цвет
                 ContextCompat.getColor(this, R.color.button) // Неактивный цвет
             )
+
         )
         bottomNavigationView.itemIconTintList = colorStates
         bottomNavigationView.itemTextColor = colorStates
@@ -84,15 +92,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Инициализация ToolBar
-        val topAppBar = findViewById<MaterialToolbar>(R.id.app_bar_layout)
+        val topAppBar = binding.appBarLayout
         topAppBar.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 R.id.settings -> {
                     Toast.makeText(this, "Настройки", Toast.LENGTH_SHORT).show()
                     true
-
                 }
-
                 else -> false
             }
         }
@@ -129,23 +135,3 @@ class MainActivity : AppCompatActivity() {
         }
     }
 }
-
-//    private fun runClickAnimation(view: View) {
-//        // Создаём анимацию уменьшения
-//        val scaleDownX = ObjectAnimator.ofFloat(view, "scaleX", 0.9f)
-//        val scaleDownY = ObjectAnimator.ofFloat(view, "scaleY", 0.9f)
-//
-//        // Создаём анимацию увеличения
-//        val scaleUpX = ObjectAnimator.ofFloat(view, "scaleX", 1f)
-//        val scaleUpY = ObjectAnimator.ofFloat(view, "scaleY", 1f)
-//
-//        // Анимация в одном наборе
-//        val animatorSet = AnimatorSet()
-//        animatorSet.play(scaleDownX).with(scaleDownY)
-//        animatorSet.play(scaleUpX).with(scaleUpY).after(scaleDownX) // Увеличение после уменьшения
-//
-//        animatorSet.duration = 200 // Общая продолжительность анимации
-//        animatorSet.start()
-//    }
-//}
-
