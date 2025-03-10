@@ -19,6 +19,100 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var filmsAdapter: FilmListRecyclerAdapter
 
+    //Создаём список фильмов
+    private val filmsDataBase = listOf(
+        Film(
+            "Парк Юрского периода",
+            R.drawable.jurassic_park,
+            "Ученые клонируют динозавров для тематического парка, но что-то идет не так..."
+        ),
+        Film(
+            "Человек-паук",
+            R.drawable.spider_man,
+            "Питер Паркер обретает суперспособности после укуса радиоактивного паука"
+        ),
+        Film(
+            "Мумия",
+            R.drawable.the_mummy,
+            "Археологи пробуждают древнее проклятие во время раскопок в Египте"
+        ),
+        Film(
+            "Человек-волк",
+            R.drawable.wolf_man,
+            "Проклятие превращает человека в оборотня во время полнолуния"
+        ),
+        Film(
+            "Флэш",
+            R.drawable.flash,
+            "Барри Аллен получает сверхчеловеческую скорость после аварии с ускорителем частиц"
+        ),
+        Film(
+            "Мстители",
+            R.drawable.avengers,
+            "Команда супергероев объединяется, чтобы спасти Землю от Локи и инопланетного вторжения"
+        ),
+        Film(
+            "1+1",
+            R.drawable.the_intouchables,
+            "Неожиданная дружба между богатым инвалидом и уличным парнем из трущоб"
+        ),
+        Film(
+            "Бойцовский клуб",
+            R.drawable.fight_club,
+            "Офисный работник и мыловар создают подпольную организацию для психологической разрядки"
+        ),
+        Film(
+            "Зелёная миля",
+            R.drawable.green_mile,
+            "История надзирателя смертников и заключённого с необычным даром"
+        ),
+        Film(
+            "Зелёная книга",
+            R.drawable.green_book,
+            "Путешествие афроамериканского пианиста и итальянского водителя по югу США 1960-х"
+        ),
+        Film(
+            "Форрест Гамп",
+            R.drawable.forrest_gump,
+            "Простой парень становится невольным участником ключевых событий американской истории"
+        ),
+        Film(
+            "Гарри Поттер",
+            R.drawable.harry_potter,
+            "Мальчик-сирота узнаёт, что он волшебник, и поступает в школу Хогвартс"
+        ),
+        Film(
+            "Властелин колец",
+            R.drawable.lord_of_rings,
+            "Эпическое путешествие хоббита Фродо для уничтожения Кольца Всевластия"
+        ),
+        Film(
+            "Интерстеллар",
+            R.drawable.interstellar,
+            "Космическая экспедиция сквозь червоточину в поисках нового дома для человечества"
+        ),
+        Film(
+            "Остров проклятых",
+            R.drawable.shutter_island,
+            "Детектив расследует исчезновение пациентки психиатрической больницы на отдалённом острове"
+        ),
+        Film(
+            "Джентльмены",
+            R.drawable.gentlemen,
+            "Криминальный босс пытается продать свой наркобизнес, но сталкивается с проблемами"
+        ),
+        Film(
+            "История игрушек",
+            R.drawable.toy_story,
+            "Игрушки оживают, когда людей нет рядом, и переживают удивительные приключения"
+        ),
+        Film(
+            "Побег из Шоушенка",
+            R.drawable.shawshank_redemption,
+            "Несправедливо осуждённый банкир Энди Дюфрейн 20 лет планирует побег из тюрьмы, сохраняя надежду и человечность"
+        )
+    )
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -31,12 +125,6 @@ class MainActivity : AppCompatActivity() {
             adapter = filmsAdapter
             addItemDecoration(TopSpacingItemDecoration(8))
         }
-
-//        val filmsDataBase = listOf(
-//            Film("Film title", R.drawable.poster, "This should be a description"),
-//            Film(...),
-//        ...
-//        )
 
 
         // Инициализация BottomNavigationView
@@ -99,6 +187,7 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this, "Настройки", Toast.LENGTH_SHORT).show()
                     true
                 }
+
                 else -> false
             }
         }
