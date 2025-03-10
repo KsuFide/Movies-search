@@ -110,31 +110,21 @@ class MainActivity : AppCompatActivity() {
     // Реализация метода applyComboAnimation
     private fun applyComboAnimation(view: View) {
         // Создаём анимации
-        // Анимация увеличения
-        val scaleX = ObjectAnimator.ofFloat(view, "scaleX", 1f, 1.2f).apply {
-            duration = 2000
-        }
-        val scaleY = ObjectAnimator.ofFloat(view, "scaleY", 1f, 1.2f).apply {
-            duration = 2000
-        }
-        val alpha = ObjectAnimator.ofFloat(view, "alpha", 1f, 0.7f).apply {
-            duration = 2000
-        }
+        // Анимация увеличения и затемнения
+        val scaleUpX = ObjectAnimator.ofFloat(view, "scaleX", 1f, 1.2f).apply { duration = 1000 }
+        val scaleUpY = ObjectAnimator.ofFloat(view, "scaleY", 1f, 1.2f).apply { duration = 1000 }
+        val fadeOut = ObjectAnimator.ofFloat(view, "alpha", 1f, 0.7f).apply { duration = 1000 }
 
-        // Анимация возврата в исходное положение
-        val scaleDownX = ObjectAnimator.ofFloat(view, "scaleX", 1.2f, 1f).apply {
-            duration = 2000
-        }
-        val scaleDownY = ObjectAnimator.ofFloat(view, "scaleY", 1.2f, 1f).apply {
-            duration = 2000
-        }
-        val fadeIn = ObjectAnimator.ofFloat(view, "alpha", 0.7f, 1f).apply {
-            duration = 2000
-        }
+        // Анимация уменьшения и восстановления яркости
+        val scaleDownX = ObjectAnimator.ofFloat(view, "scaleX", 1.2f, 1f).apply { duration = 1000 }
+        val scaleDownY = ObjectAnimator.ofFloat(view, "scaleY", 1.2f, 1f).apply { duration = 1000 }
+        val fadeIn = ObjectAnimator.ofFloat(view, "alpha", 0.7f, 1f).apply { duration = 1000 }
 
         AnimatorSet().apply {
-            play(scaleX).with(scaleY).with(fadeIn) // Одновременно увеличиваем масштаб и уменьшаем прозрачность
-           play(scaleDownX).with(scaleDownY).with(alpha) // Возвращаем после увеличения
+            // Сначала запускаем увеличение и затемнение вместе
+            play(scaleUpX).with(scaleUpY).with(fadeOut)
+            // Затем, после их завершения, запускаем уменьшение и восстановление
+            play(scaleDownX).with(scaleDownY).with(fadeIn).after(scaleUpX)
             start()
         }
     }
