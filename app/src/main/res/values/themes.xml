@@ -3,9 +3,11 @@
     <style name="Base.Theme.MovieSearch" parent="Theme.Material3.Dark.NoActionBar">
         <!-- Цвета -->
         <item name="itemBackground">@android:color/transparent</item>
-        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimary">#17B0B4</item>
         <item name="colorOnPrimary">@color/colorPrimaryDark</item>
 
+        <!-- Статус-бар -->
+        <item name="android:windowTranslucentStatus">true</item>
 
     </style>
 
