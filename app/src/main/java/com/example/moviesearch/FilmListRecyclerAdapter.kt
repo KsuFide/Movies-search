@@ -31,11 +31,19 @@ class FilmListRecyclerAdapter(
 
     // В этом методе будет привязка полей из объекта Film к View из film.item.xml
     override fun onBindViewHolder(holder: FilmViewHolder, position: Int) {
-        // Вызываем метод bind(), который мы создали, и передаём туда объект
-        // из нашей базы данных с указанием позиции
-        holder.bind(items[position])
-        holder.itemView.setOnClickListener {
-            clickListener.click(items[position])
+        // Проверяем какой у нас ViewHolder
+        when (holder) {
+            is FilmViewHolder -> {
+                // Вызываем метод bind(), который мы создали, и передаём туда объект
+                // из нашей базы данных с указанием позиции
+                holder.bind(items[position])
+                // Обрабатываем нажатие на весь элемент целиком(можно сделать на отдельный элемент
+                // например, картинку) и вызываем метод нашего листенера, который мы получаем из
+                // конструктора адаптера
+                holder.itemView.setOnClickListener {
+                    clickListener.click(items[position])
+                }
+            }
         }
     }
 

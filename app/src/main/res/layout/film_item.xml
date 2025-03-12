@@ -11,8 +11,8 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
+        android:background="@color/white"
         android:layout_height="match_parent">
-
 
         <ImageView
             android:id="@+id/poster"
@@ -28,6 +28,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:textAlignment="center"
+            android:background="#D3C7B9"
+            android:textColor="@color/colorPrimaryDark"
             android:padding="8dp"
             android:textAppearance="@style/TextAppearance.AppCompat.Headline"
             app:layout_constraintLeft_toRightOf="@+id/poster"
@@ -40,17 +42,15 @@
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:padding="8dp"
+            android:background="#D3C7B9"
+            android:textColor="@color/colorPrimaryDark"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toRightOf="@id/poster"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@id/title"
             tools:text="@tools:sample/lorem/random" />
 
-
-
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-
 </androidx.cardview.widget.CardView>
 
 

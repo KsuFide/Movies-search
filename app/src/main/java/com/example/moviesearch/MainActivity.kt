@@ -2,6 +2,7 @@ package com.example.moviesearch
 
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.View
@@ -32,7 +33,9 @@ class MainActivity : AppCompatActivity() {
             filmsAdapter =
                 FilmListRecyclerAdapter(object : FilmListRecyclerAdapter.OnItemClickListener {
                     override fun click(film: Film) {
-
+                        // Запускаем наше активити
+                        val intent = Intent(this@MainActivity, DetailsActivity::class.java)
+                        startActivity(intent)
                     }
                 })
 
