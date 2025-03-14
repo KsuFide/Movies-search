@@ -1,151 +1,124 @@
 package com.example.moviesearch
 
-import android.animation.AnimatorSet
-import android.animation.ObjectAnimator
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
+import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
-import com.google.android.material.appbar.MaterialToolbar
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.moviesearch.databinding.ActivityMainBinding
+import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity() {
 
+    // View Binding для доступа к элементам интерфейса
+    private lateinit var binding: ActivityMainBinding
+
+    // Адаптер для RecyclerView
+    private lateinit var filmsAdapter: FilmListRecyclerAdapter
+
+    // Флаги состояний для управления избранным и отложенным просмотром
+    private var isFavorite = false
+    private var isWatchLater = false
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
 
+        // Инициализация View Binding
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        // Анимация с использованием ObjectAnimator
-        // Найдём постеры
-        val poster1 = findViewById<CardView>(R.id.poster_1)
-        val poster2 = findViewById<CardView>(R.id.poster_2)
-        val poster3 = findViewById<CardView>(R.id.poster_3)
-        val poster4 = findViewById<CardView>(R.id.poster_4)
-
-        // Применяем анимацию и обработчик кликов к каждому постеру
-        listOf(poster1, poster2, poster3, poster4).forEach { poster ->
-            setupPosterClick(poster)
+        // Настройка RecyclerView с лямбдой-обработчиком кликов
+        filmsAdapter = FilmListRecyclerAdapter { film ->
+            // Создание интента для перехода на экран деталей
+            val intent = Intent(this, DetailsActivity::class.java).apply {
+                putExtra("film", film) // Передача объекта Film
+            }
+            startActivity(intent)
         }
 
+        // Конфигурация RecyclerView
+        binding.mainRecycler.apply {
+            adapter = filmsAdapter
+            layoutManager = LinearLayoutManager(this@MainActivity) // Линейный макет
+            addItemDecoration(TopSpacingItemDecoration(8)) // Декоратор для отступов
+        }
 
-        // Инициализация BottomNavigationView
-        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation)
-        // Установка активного и неактивного цветов программно
-        val colorStates = ColorStateList(
-            arrayOf(
-                intArrayOf(android.R.attr.state_checked), // Активное состояние
-                intArrayOf(-android.R.attr.state_checked) // Неактивное
-            ),
-            intArrayOf(
-                ContextCompat.getColor(this, R.color.white), // Активный цвет
-                ContextCompat.getColor(this, R.color.button) // Неактивный цвет
+        // Загрузка данных в RecyclerView
+        filmsAdapter.submitList(Data.films)
+
+        // Настройка BottomNavigationView
+        with(binding.bottomNavigation) {
+            // Установка активного и неактивного цветов программно
+            val colorStates = ColorStateList(
+                arrayOf(
+                    intArrayOf(android.R.attr.state_checked), // Активное состояние
+                    intArrayOf(-android.R.attr.state_checked) // Неактивное
+                ),
+                intArrayOf(
+                    ContextCompat.getColor(context, R.color.white), // Активный цвет
+                    ContextCompat.getColor(context, R.color.button) // Неактивный цвет
+                )
             )
-        )
-        bottomNavigationView.itemIconTintList = colorStates
-        bottomNavigationView.itemTextColor = colorStates
-        bottomNavigationView.setOnItemSelectedListener { item ->
-            val view = findViewById<View>(item.itemId)
-            view.animate()
-                .scaleX(0.8f)
-                .scaleY(0.8f)
-                .translationYBy(-20f)
-                .setDuration(500)
-                .withEndAction {
-                    view.animate()
-                        .scaleX(1f)
-                        .scaleY(1f)
-                        .translationYBy(20f)
-                        .setDuration(500)
-                }
-                .start()
+            itemIconTintList = colorStates
+            itemTextColor = colorStates
 
-            when (item.itemId) {
-                R.id.favorites -> {
-                    Toast.makeText(this, "Избранное", Toast.LENGTH_SHORT).show()
-                    true
+            // Обработка выбора пунктов меню
+            setOnItemSelectedListener { item ->
+                when (item.itemId) {
+                    R.id.favorites -> showSnackbar("Избранное")
+                    R.id.watch_later -> showSnackbar("Посмотреть позже")
+                    R.id.selections -> showSnackbar("Подборки")
+                    else -> return@setOnItemSelectedListener false
                 }
+                true // Возвращаем true для подтверждения выбора
+            }
 
-                R.id.watch_later -> {
-                    Toast.makeText(this, "Посмотреть позже", Toast.LENGTH_SHORT).show()
-                    true
-                }
-
-                R.id.selections -> {
-                    Toast.makeText(this, "Подборки", Toast.LENGTH_SHORT).show()
-                    true
-                }
-
-                else -> false
+            // Анимация при нажатии
+            setOnItemSelectedListener { item ->
+                animateItemSelection(item)
+                true
             }
         }
 
         // Инициализация ToolBar
-        val topAppBar = findViewById<MaterialToolbar>(R.id.app_bar_layout)
-        topAppBar.setOnMenuItemClickListener { item ->
+        binding.appBarLayout.setOnMenuItemClickListener { item ->
             when (item.itemId) {
-                R.id.settings -> {
-                    Toast.makeText(this, "Настройки", Toast.LENGTH_SHORT).show()
-                    true
-
-                }
-
-                else -> false
+                R.id.settings -> Toast.makeText(this, "Настройки", Toast.LENGTH_SHORT).show()
             }
+            true
         }
     }
 
-    // Настройка кликов и анимации для CardView
-    private fun setupPosterClick(cardView: CardView) {
-        // Добавляем обработчик клика
-        cardView.setOnClickListener { poster ->
-            applyComboAnimation(poster) // Комбо-анимация
-            Toast.makeText(this, "Клик по карточке!", Toast.LENGTH_SHORT).show()
-        }
+    // Анимация выбранного элемента меню
+    private fun animateItemSelection(item: MenuItem) {
+        val view = findViewById<View>(item.itemId)
+        view.animate()
+            .scaleX(0.8f) // Уменьшение по X
+            .scaleY(0.8f) // Уменьшение по Y
+            .translationYBy(-20f) // Сдвиг вверх
+            .setDuration(500) // Длительность анимации
+            .withEndAction { // Обратный эффект после завершения
+                view.animate()
+                    .scaleX(1f) // Возврат к исходному размеру
+                    .scaleY(1f)
+                    .translationYBy(20f) // Возврат в исходную позицию
+                    .setDuration(500)
+            }
+            .start()
     }
 
-    // Реализация метода applyComboAnimation
-    private fun applyComboAnimation(view: View) {
-        // Создаём анимации
-        // Анимация увеличения и затемнения
-        val scaleUpX = ObjectAnimator.ofFloat(view, "scaleX", 1f, 1.2f).apply { duration = 1000 }
-        val scaleUpY = ObjectAnimator.ofFloat(view, "scaleY", 1f, 1.2f).apply { duration = 1000 }
-        val fadeOut = ObjectAnimator.ofFloat(view, "alpha", 1f, 0.7f).apply { duration = 1000 }
-
-        // Анимация уменьшения и восстановления яркости
-        val scaleDownX = ObjectAnimator.ofFloat(view, "scaleX", 1.2f, 1f).apply { duration = 1000 }
-        val scaleDownY = ObjectAnimator.ofFloat(view, "scaleY", 1.2f, 1f).apply { duration = 1000 }
-        val fadeIn = ObjectAnimator.ofFloat(view, "alpha", 0.7f, 1f).apply { duration = 1000 }
-
-        AnimatorSet().apply {
-            // Сначала запускаем увеличение и затемнение вместе
-            play(scaleUpX).with(scaleUpY).with(fadeOut)
-            // Затем, после их завершения, запускаем уменьшение и восстановление
-            play(scaleDownX).with(scaleDownY).with(fadeIn).after(scaleUpX)
-            start()
-        }
+    // Показ всплывающих уведомлений
+    private fun showSnackbar(message: String) {
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
     }
 }
 
-//    private fun runClickAnimation(view: View) {
-//        // Создаём анимацию уменьшения
-//        val scaleDownX = ObjectAnimator.ofFloat(view, "scaleX", 0.9f)
-//        val scaleDownY = ObjectAnimator.ofFloat(view, "scaleY", 0.9f)
-//
-//        // Создаём анимацию увеличения
-//        val scaleUpX = ObjectAnimator.ofFloat(view, "scaleX", 1f)
-//        val scaleUpY = ObjectAnimator.ofFloat(view, "scaleY", 1f)
-//
-//        // Анимация в одном наборе
-//        val animatorSet = AnimatorSet()
-//        animatorSet.play(scaleDownX).with(scaleDownY)
-//        animatorSet.play(scaleUpX).with(scaleUpY).after(scaleDownX) // Увеличение после уменьшения
-//
-//        animatorSet.duration = 200 // Общая продолжительность анимации
-//        animatorSet.start()
-//    }
-//}
+
+
+
 

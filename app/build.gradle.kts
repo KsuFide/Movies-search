@@ -1,6 +1,9 @@
+import kotlin.script.experimental.jvm.util.KotlinJars.stdlib
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("kotlin-parcelize")
 }
 
 android {
@@ -33,10 +36,16 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+
+    buildFeatures {
+        viewBinding = true
+        buildConfig = true
+    }
 }
 
 dependencies {
 
+    implementation ("org.jetbrains.kotlin:kotlin-stdlib:1.9.20")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -44,6 +53,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
+    implementation ("androidx.core:core-ktx:1.12.0")
     androidTestImplementation(libs.androidx.espresso.core)
     implementation("com.google.android.material:material:1.13.0-alpha09")
 }
