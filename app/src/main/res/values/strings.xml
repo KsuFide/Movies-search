@@ -7,6 +7,9 @@
     <string name="btn_menu4">Подборки</string>
     <string name="btn_menu5">Настройки</string>
     <string name="page_title">Search it!</string>
+    <string name="favorite_action">Добавить в избранное</string>
+    <string name="watch_later_action">Посмотреть позже</string>
+
 
 
 </resources>

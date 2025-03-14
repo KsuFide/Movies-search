@@ -8,4 +8,6 @@
     <string name="btn_menu4">" Collections"</string>
     <string name="btn_menu5">" Nastroyki Settings"</string>
     <string name="page_title">Search it!</string>
+    <string name="favorite_action">Add to favorites</string>
+    <string name="watch_later_action">Watch later!</string>
 </resources>

@@ -1,7 +1,12 @@
 package com.example.moviesearch
 
+import android.os.Parcelable
+import androidx.annotation.DrawableRes
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
 data class Film(
     val title: String,
-    val poster: Int,
+    @DrawableRes val poster: Int,
     val description: String
-)
+) : Parcelable

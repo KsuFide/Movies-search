@@ -8,5 +8,7 @@
     <color name="colorPrimary">#12C4C8</color>
     <color name="holo_orange_light">#AD2F08</color>
     <color name="colorAccent">#0A72A6</color>
+    <color name="red">#FF0000</color>
+    <color name="blue">#03A9F4</color>
 
 </resources>
