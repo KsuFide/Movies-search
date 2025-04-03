@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".DetailsActivity">
+    tools:context=".DetailsFragment">
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/app_bar"
@@ -54,11 +54,11 @@
 
         <ImageButton
             android:id="@+id/favorite_btn"
+            style="@style/icon_details"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_marginTop="30dp"
             android:layout_marginEnd="5dp"
-            style="@style/icon_details"
             android:contentDescription="@string/favorite_action"
             android:scaleType="center"
             android:src="@drawable/baseline_favorite_24"
@@ -67,9 +67,9 @@
         <ImageButton
             android:id="@+id/watch_later_btn"
             style="@style/icon_details"
-            android:layout_marginTop="30dp"
             android:layout_width="40dp"
             android:layout_height="40dp"
+            android:layout_marginTop="30dp"
             android:contentDescription="@string/watch_later_action"
             android:scaleType="center"
             android:src="@drawable/baseline_watch_later_24"
