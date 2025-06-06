@@ -2,29 +2,35 @@ package com.example.moviesearch
 
 import android.content.res.ColorStateList
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.content.ContextCompat
-import com.example.moviesearch.databinding.ActivityDetailsBinding
+import androidx.fragment.app.Fragment
+import com.example.moviesearch.databinding.FragmentDetailsBinding
 import com.google.android.material.shape.CornerFamily
 import com.google.android.material.shape.ShapeAppearanceModel
 import com.google.android.material.snackbar.Snackbar
 
-class DetailsActivity : AppCompatActivity() {
+class DetailsFragment : Fragment() {
 
     // Объявляем переменную для binding
-    private lateinit var binding: ActivityDetailsBinding
+    private var _binding: FragmentDetailsBinding? = null
+    private val binding get() = _binding!!
 
     // Флаги состояний для кнопок
     private var isFavorite = false
     private var isWatchLater = false
 
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        _binding = FragmentDetailsBinding.inflate(inflater, container, false)
 
-        // Инициализируем binding
-        binding = ActivityDetailsBinding.inflate(layoutInflater)
-        setContentView(binding.root)
 
         // Скругляем иконку fab
         binding.detailsFab.shapeAppearanceModel = ShapeAppearanceModel()
@@ -32,8 +38,11 @@ class DetailsActivity : AppCompatActivity() {
             .setAllCorners(CornerFamily.ROUNDED, 100f)
             .build()
 
-        // Получаем объект Film из интента
-        val film = intent.getParcelableExtra<Film>("film") ?: return
+        // Получаем объект Film
+        val film = arguments?.getParcelable<Film>("film") ?: run {
+            showErrorAndClose()
+            return binding.root
+        }
 
         // Настройка элементов интерфейса
         with(binding) {
@@ -45,62 +54,62 @@ class DetailsActivity : AppCompatActivity() {
             detailsDescription.text = film.description
 
             // Обработчик кликов
-            favoriteBtn.setOnClickListener { handleFavoriteClick() }
-            watchLaterBtn.setOnClickListener { handleWatchLaterClick() }
+            favoriteBtn.setOnClickListener { toggleFavorite() }
+            watchLaterBtn.setOnClickListener { toggleWatchLater() }
+            updateButtonAppearance()
 
         }
+        return binding.root
     }
 
-//        // Для цвета иконки (если захочу поменять)
-//        binding.detailsFab.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.black))
-
     // Обработчик клика для кнопки "Избранное"
-    private fun handleFavoriteClick() {
+    private fun toggleFavorite() {
         isFavorite = !isFavorite
-        showSnackbar( // Обновляем внешний вид кнопок
+        showSnackbar(
             if (isFavorite) "Добавлено в избранное" else "Удалено из избранного",
             if (isFavorite) "Отменить" else null
-        ) {
-            // Действие при отмене
-            isFavorite = !isFavorite
-            updateButtonAppearance()
-        }
+        ) { isFavorite = !isFavorite; updateButtonAppearance() }
+        updateButtonAppearance()
     }
 
     // Обработчик клика для кнопки "Посмотреть позже"
-
-    private fun handleWatchLaterClick() {
+    private fun toggleWatchLater() {
         isWatchLater = !isWatchLater
-        updateButtonAppearance()
-        showSnackbar( // Обновляем внешний вид кнопок
+        showSnackbar(
             if (isWatchLater) "Добавлено в список" else "Удалено из списка",
             if (isWatchLater) "Отменить" else null
-        ) {
-            isWatchLater = !isWatchLater
-            updateButtonAppearance()
-        }
+        ) { isWatchLater = !isWatchLater; updateButtonAppearance() }
+        updateButtonAppearance()
     }
 
     // Обновление внешнего вида кнопок на основе текущих состояний
     private fun updateButtonAppearance() {
         with(binding) {
-            // Установка цвета для кнопки "Избранное"
             favoriteBtn.imageTintList = ColorStateList.valueOf(
                 ContextCompat.getColor(
-                    this@DetailsActivity,
+                    requireContext(),
                     if (isFavorite) R.color.red else R.color.button
                 )
             )
-
             // Установка цвета для кнопки "Посмотреть позже"
             watchLaterBtn.imageTintList = ColorStateList.valueOf(
                 ContextCompat.getColor(
-                    this@DetailsActivity,
+                    requireContext(),
                     if (isWatchLater) R.color.blue else R.color.button
                 )
             )
         }
     }
+
+
+    private fun showErrorAndClose() {
+        Toast.makeText(requireContext(), "Ошибка загрузки", Toast.LENGTH_SHORT).show()
+        parentFragmentManager.popBackStack()
+    }
+
+
+    // Для цвета иконки (если захочу поменять)
+    // binding.detailsFab.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.black))
 
     // Показать всплывающее уведомление (Snackbar)
     private fun showSnackbar(
@@ -116,5 +125,10 @@ class DetailsActivity : AppCompatActivity() {
             // Привязываем Snackbar к FAB для правильного позиционирования
             anchorView = binding.detailsFab
         }.show()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

@@ -5,13 +5,13 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
     android:background="@drawable/corner_background"
+    android:fitsSystemWindows="true"
     tools:context=".MainActivity">
 
     <!-- Toolbar верхнее меню -->
     <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/appBarLayout2"
+        android:id="@+id/app_bar_layout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
@@ -19,103 +19,22 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/app_bar_layout"
+            android:id="@+id/toolbar"
             style="@style/Widget.MaterialComponents.Toolbar.Primary"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:menu="@menu/menu_tool_bar"
             app:navigationIcon="@drawable/baseline_menu_24"
             app:title="@string/page_title" />
+
     </com.google.android.material.appbar.AppBarLayout>
 
-    <!-- Верхний контейнер -->
-    <androidx.cardview.widget.CardView
-        android:id="@+id/top_menu"
-        android:layout_width="0dp"
-        android:layout_height="100dp"
-        android:layout_margin="10dp"
-        android:layout_marginStart="9dp"
-        android:layout_marginEnd="9dp"
-        android:elevation="5dp"
-        app:cardCornerRadius="15dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/appBarLayout2">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal">
-
-            <ImageView
-                android:id="@+id/film1"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:scaleType="centerCrop"
-                app:srcCompat="@drawable/jurassic_park" />
-
-            <ImageView
-                android:id="@+id/film2"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:scaleType="centerCrop"
-                app:srcCompat="@drawable/spider_man" />
-
-            <ImageView
-                android:id="@+id/film3"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:scaleType="centerCrop"
-                app:srcCompat="@drawable/the_mummy" />
-
-            <ImageView
-                android:id="@+id/film4"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:scaleType="centerCrop"
-                app:srcCompat="@drawable/wolf_man" />
-
-            <ImageView
-                android:id="@+id/film5"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:scaleType="centerCrop"
-                app:srcCompat="@drawable/flash" />
-
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
-
-    <TextView
-        android:id="@+id/disclaimer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:autoLink="web"
-        android:linksClickable="true"
-        android:text="@string/disclaimer"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/top_menu" />
-
-
-    <!-- Постеры -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/main_recycler"
-        android:layout_width="0dp"
+    <FrameLayout
+        android:id="@+id/fragment_placeholder"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_margin="16dp"
-        tools:itemCount="3"
-        tools:orientation="vertical"
-        tools:listitem="@layout/film_item"
-        app:layout_constraintTop_toBottomOf="@id/disclaimer"
-        app:layout_constraintBottom_toTopOf="@+id/bottom_navigation"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/app_bar_layout"
+        app:layout_constraintBottom_toTopOf="@+id/bottom_navigation"/>
 
     <!-- BottomNavigationView нижнее меню -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
