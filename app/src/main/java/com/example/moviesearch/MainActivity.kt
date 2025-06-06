@@ -1,16 +1,12 @@
 package com.example.moviesearch
 
 import android.content.Intent
-import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.moviesearch.databinding.ActivityMainBinding
-import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity() {
 
@@ -20,10 +16,6 @@ class MainActivity : AppCompatActivity() {
     // Адаптер для RecyclerView
     private lateinit var filmsAdapter: FilmListRecyclerAdapter
 
-    // Флаги состояний для управления избранным и отложенным просмотром
-    private var isFavorite = false
-    private var isWatchLater = false
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,70 +24,66 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Настройка RecyclerView с лямбдой-обработчиком кликов
-        filmsAdapter = FilmListRecyclerAdapter { film ->
-            // Создание интента для перехода на экран деталей
-            val intent = Intent(this, DetailsActivity::class.java).apply {
-                putExtra("film", film) // Передача объекта Film
-            }
-            startActivity(intent)
-        }
+        // Устанавливаем Home активным по умолчанию
+        binding.bottomNavigation.selectedItemId = R.id.home
 
-        // Конфигурация RecyclerView
-        binding.mainRecycler.apply {
-            adapter = filmsAdapter
-            layoutManager = LinearLayoutManager(this@MainActivity) // Линейный макет
-            addItemDecoration(TopSpacingItemDecoration(8)) // Декоратор для отступов
-        }
+        // Настройка RecyclerView
+        setupRecycler()
 
-        // Загрузка данных в RecyclerView
-        filmsAdapter.submitList(Data.films)
+        // Настройка нижнего меню
+        binding.bottomNavigation.setOnItemSelectedListener { item ->
+            // Запускаем анимацию
+            animateIcon(item)
 
-        // Настройка BottomNavigationView
-        with(binding.bottomNavigation) {
-            // Установка активного и неактивного цветов программно
-            val colorStates = ColorStateList(
-                arrayOf(
-                    intArrayOf(android.R.attr.state_checked), // Активное состояние
-                    intArrayOf(-android.R.attr.state_checked) // Неактивное
-                ),
-                intArrayOf(
-                    ContextCompat.getColor(context, R.color.white), // Активный цвет
-                    ContextCompat.getColor(context, R.color.button) // Неактивный цвет
-                )
-            )
-            itemIconTintList = colorStates
-            itemTextColor = colorStates
-
-            // Обработка выбора пунктов меню
-            setOnItemSelectedListener { item ->
-                when (item.itemId) {
-                    R.id.favorites -> showSnackbar("Избранное")
-                    R.id.watch_later -> showSnackbar("Посмотреть позже")
-                    R.id.selections -> showSnackbar("Подборки")
-                    else -> return@setOnItemSelectedListener false
-                }
-                true // Возвращаем true для подтверждения выбора
-            }
-
-            // Анимация при нажатии
-            setOnItemSelectedListener { item ->
-                animateItemSelection(item)
-                true
-            }
-        }
-
-        // Инициализация ToolBar
-        binding.appBarLayout.setOnMenuItemClickListener { item ->
             when (item.itemId) {
-                R.id.settings -> Toast.makeText(this, "Настройки", Toast.LENGTH_SHORT).show()
+                R.id.favorites -> {
+                    // Переход во фрагмент избранного
+                    openFavorites()
+                    true
+                }
+
+                R.id.home -> {
+                    closeFavorites()
+                    true
+                }
+
+                else -> false
             }
-            true
         }
     }
 
+    private fun setupRecycler() {
+        filmsAdapter = FilmListRecyclerAdapter { film -> launchDetailsActivity(film) }
+        binding.mainRecycler.apply {
+            adapter = filmsAdapter
+            layoutManager = LinearLayoutManager(this@MainActivity)
+            addItemDecoration(TopSpacingItemDecoration(8))
+        }
+        filmsAdapter.submitList(Data.films)
+    }
+
+    private fun openFavorites() {
+        binding.mainRecycler.visibility = View.GONE
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.main_container, FavoritesFragment())
+            .commit()
+    }
+
+    private fun closeFavorites() {
+        binding.mainRecycler.visibility = View.VISIBLE
+        supportFragmentManager.findFragmentById(R.id.main_container)?.let {
+            supportFragmentManager.beginTransaction().remove(it).commit()
+        }
+    }
+
+    fun launchDetailsActivity(film: Film) {
+        startActivity(Intent(this, DetailsActivity::class.java).apply {
+            putExtra("film", film)
+        })
+    }
+
     // Анимация выбранного элемента меню
-    private fun animateItemSelection(item: MenuItem) {
+    private fun animateIcon(item: MenuItem) {
         val view = findViewById<View>(item.itemId)
         view.animate()
             .scaleX(0.8f) // Уменьшение по X
@@ -112,11 +100,23 @@ class MainActivity : AppCompatActivity() {
             .start()
     }
 
-    // Показ всплывающих уведомлений
-    private fun showSnackbar(message: String) {
-        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+    private fun showFavorites() {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.main_container, FavoritesFragment())
+            .commit()
+    }
+
+    private fun showHome() {
+        supportFragmentManager.findFragmentById(R.id.main_container)?.let {
+            supportFragmentManager.beginTransaction().remove(it).commit()
+        }
+        // Возвращаем выбор на Home
+        binding.bottomNavigation.selectedItemId = R.id.home
     }
 }
+
+
+
 
 
 

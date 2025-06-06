@@ -1,5 +1,6 @@
 package com.example.moviesearch
 
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -13,27 +14,34 @@ class DetailsActivity : AppCompatActivity() {
 
     // Объявляем переменную для binding
     private lateinit var binding: ActivityDetailsBinding
-
-    // Флаги состояний для кнопок
-    private var isFavorite = false
-    private var isWatchLater = false
-
+    private lateinit var film: Film // Фильм, который просматривается
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         // Инициализируем binding
         binding = ActivityDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Получаем объект Film из интента
+        film = intent.getParcelableExtra<Film>("film") ?: run {
+            finish() // Закрываем активити, если фильм передан
+            return
+        }
+
+
+        // Проверяем статус избранного при создании активити
+        film.isInFavorites = Database.isFavorite(film)
 
         // Скругляем иконку fab
         binding.detailsFab.shapeAppearanceModel = ShapeAppearanceModel()
             .toBuilder()
             .setAllCorners(CornerFamily.ROUNDED, 100f)
             .build()
+        binding.detailsFabFavorites.shapeAppearanceModel = ShapeAppearanceModel()
+            .toBuilder()
+            .setAllCorners(CornerFamily.ROUNDED, 100f)
+            .build()
 
-        // Получаем объект Film из интента
-        val film = intent.getParcelableExtra<Film>("film") ?: return
 
         // Настройка элементов интерфейса
         with(binding) {
@@ -44,69 +52,68 @@ class DetailsActivity : AppCompatActivity() {
             // Устанавливаем описание
             detailsDescription.text = film.description
 
-            // Обработчик кликов
-            favoriteBtn.setOnClickListener { handleFavoriteClick() }
-            watchLaterBtn.setOnClickListener { handleWatchLaterClick() }
 
-        }
-    }
+            // Обновляем вид кнопки согласно текущему состоянию
+            updateFavoriteButton()
 
-//        // Для цвета иконки (если захочу поменять)
-//        binding.detailsFab.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.black))
-
-    // Обработчик клика для кнопки "Избранное"
-    private fun handleFavoriteClick() {
-        isFavorite = !isFavorite
-        showSnackbar( // Обновляем внешний вид кнопок
-            if (isFavorite) "Добавлено в избранное" else "Удалено из избранного",
-            if (isFavorite) "Отменить" else null
-        ) {
-            // Действие при отмене
-            isFavorite = !isFavorite
-            updateButtonAppearance()
-        }
-    }
-
-    // Обработчик клика для кнопки "Посмотреть позже"
-
-    private fun handleWatchLaterClick() {
-        isWatchLater = !isWatchLater
-        updateButtonAppearance()
-        showSnackbar( // Обновляем внешний вид кнопок
-            if (isWatchLater) "Добавлено в список" else "Удалено из списка",
-            if (isWatchLater) "Отменить" else null
-        ) {
-            isWatchLater = !isWatchLater
-            updateButtonAppearance()
-        }
-    }
-
-    // Обновление внешнего вида кнопок на основе текущих состояний
-    private fun updateButtonAppearance() {
-        with(binding) {
-            // Установка цвета для кнопки "Избранное"
-            favoriteBtn.imageTintList = ColorStateList.valueOf(
-                ContextCompat.getColor(
-                    this@DetailsActivity,
-                    if (isFavorite) R.color.red else R.color.button
+            // Обработчик клика по кнопке избранного
+            detailsFabFavorites.setOnClickListener {
+                val wasFavorite = Database.isFavorite(film)
+                Database.toggleFavorite(film)
+                // Обновляем вид кнопки
+                updateFavoriteButton()
+                // Показываем уведомление о действии
+                showSnackbar(
+                    if (Database.isFavorite(film)) "Добавлено в избранное" else "Удалено из избранного",
+                    "Отменить", // Текст кнопки отмены
+                    {
+                        //Действие при отмене - возвращаем предыдущее состояние
+                        Database.toggleFavorite(film)
+                        updateFavoriteButton()
+                    }
                 )
-            )
+            }
 
-            // Установка цвета для кнопки "Посмотреть позже"
-            watchLaterBtn.imageTintList = ColorStateList.valueOf(
-                ContextCompat.getColor(
-                    this@DetailsActivity,
-                    if (isWatchLater) R.color.blue else R.color.button
-                )
-            )
+            // Обработчик клика по кнопке поделиться
+            detailsFab.setOnClickListener {
+                // Создаём интент для отправки данных
+                val intent = Intent().apply {
+                    action = Intent.ACTION_SEND // Указываем тип действие
+                    // Добавляем текст с информацией о фильме
+                    putExtra(
+                        Intent.EXTRA_TEXT,
+                        "Посмотрите этот фильм: ${film.title}\n\n${film.description}"
+                    )
+                    type = "text/plain" // Указываем тип данных
+                }
+                // Запускаем диалог выбора приложения для отправки
+                startActivity(Intent.createChooser(intent, "Поделиться через:"))
+            }
         }
     }
+
+
+    // Метод для обновления вида кнопки избранного
+    private fun updateFavoriteButton() {
+        val isFavorite = Database.isFavorite(film)
+        binding.detailsFabFavorites.setImageResource(
+            R.drawable.baseline_favorite_24
+        )
+        binding.detailsFabFavorites.imageTintList = ColorStateList.valueOf(
+            ContextCompat.getColor(
+                this,
+                if (isFavorite) R.color.red else R.color.white
+            )
+        )
+    }
+
+
 
     // Показать всплывающее уведомление (Snackbar)
     private fun showSnackbar(
         message: String,
         actionText: String?,
-        undoAction: () -> Unit // Функция для отмены действия
+        undoAction: () -> Unit = {} // Функция для отмены действия
     ) {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).apply {
             actionText?.let { text ->
