@@ -43,4 +43,8 @@ class FilmListRecyclerAdapter(
         holder.bind(getItem(position))
 
     }
+
+    fun addItems(items: List<Film>) {
+        submitList(items)
+    }
 }

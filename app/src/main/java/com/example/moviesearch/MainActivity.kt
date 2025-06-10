@@ -13,10 +13,6 @@ class MainActivity : AppCompatActivity() {
     // View Binding для доступа к элементам интерфейса
     private lateinit var binding: ActivityMainBinding
 
-    // Адаптер для RecyclerView
-    private lateinit var filmsAdapter: FilmListRecyclerAdapter
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -24,11 +20,16 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Устанавливаем Home активным по умолчанию
+        // Устанавливаем HomeFragment по умолчанию (только при первом создании)
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.main_container, HomeFragment()) // Замена контейнера на HomeFragment
+                .commit()
+        }
+
+        // Устанавливаем Home (иконка главное меню) активным по умолчанию
         binding.bottomNavigation.selectedItemId = R.id.home
 
-        // Настройка RecyclerView
-        setupRecycler()
 
         // Настройка нижнего меню
         binding.bottomNavigation.setOnItemSelectedListener { item ->
@@ -38,47 +39,28 @@ class MainActivity : AppCompatActivity() {
             when (item.itemId) {
                 R.id.favorites -> {
                     // Переход во фрагмент избранного
-                    openFavorites()
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.main_container, FavoritesFragment())
+                        .commit()
                     true
                 }
 
                 R.id.home -> {
-                    closeFavorites()
+                    // Переход на главный фрагмент
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.main_container, HomeFragment())
                     true
                 }
 
-                else -> false
+                else -> false // Неизвестный пункт - не обрабатываем
             }
         }
     }
 
-    private fun setupRecycler() {
-        filmsAdapter = FilmListRecyclerAdapter { film -> launchDetailsActivity(film) }
-        binding.mainRecycler.apply {
-            adapter = filmsAdapter
-            layoutManager = LinearLayoutManager(this@MainActivity)
-            addItemDecoration(TopSpacingItemDecoration(8))
-        }
-        filmsAdapter.submitList(Data.films)
-    }
-
-    private fun openFavorites() {
-        binding.mainRecycler.visibility = View.GONE
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.main_container, FavoritesFragment())
-            .commit()
-    }
-
-    private fun closeFavorites() {
-        binding.mainRecycler.visibility = View.VISIBLE
-        supportFragmentManager.findFragmentById(R.id.main_container)?.let {
-            supportFragmentManager.beginTransaction().remove(it).commit()
-        }
-    }
-
+    // Запуск активити с деталями фильма
     fun launchDetailsActivity(film: Film) {
         startActivity(Intent(this, DetailsActivity::class.java).apply {
-            putExtra("film", film)
+            putExtra("film", film) // Передаём фильм через Intent
         })
     }
 
