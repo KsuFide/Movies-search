@@ -5,102 +5,99 @@ import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.moviesearch.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
 
-    // View Binding для доступа к элементам интерфейса
     private lateinit var binding: ActivityMainBinding
+    private var lastSelectedItemId: Int = R.id.home // Текущий выбранный пункт
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Инициализация View Binding
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Устанавливаем HomeFragment по умолчанию (только при первом создании)
+        // Установка стартового фрагмента
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
-                .replace(R.id.main_container, HomeFragment()) // Замена контейнера на HomeFragment
+                .replace(R.id.main_container, HomeFragment())
                 .commit()
         }
 
-        // Устанавливаем Home (иконка главное меню) активным по умолчанию
         binding.bottomNavigation.selectedItemId = R.id.home
+        lastSelectedItemId = R.id.home
 
-
-        // Настройка нижнего меню
+        // Обработчик навигации
         binding.bottomNavigation.setOnItemSelectedListener { item ->
-            // Запускаем анимацию
+            // Анимация иконки
             animateIcon(item)
 
+            // Определение анимации перехода
+            val (enterAnim, exitAnim) = when {
+                // Home -> Favorites: вход справа, выход влево
+                item.itemId == R.id.favorites && lastSelectedItemId == R.id.home ->
+                    Pair(R.anim.slide_in_right, R.anim.slide_out_left)
+
+                // Favorites -> Home: вход слева, выход вправо
+                item.itemId == R.id.home && lastSelectedItemId == R.id.favorites ->
+                    Pair(R.anim.slide_in_left, R.anim.slide_out_right)
+
+                // Для других случаев - плавное появление
+                else -> Pair(R.anim.fade_in, R.anim.fade_out)
+            }
+
+            lastSelectedItemId = item.itemId // Обновление текущего пункта
+
+            // Обработка выбора пункта меню
             when (item.itemId) {
                 R.id.favorites -> {
-                    // Переход во фрагмент избранного
                     supportFragmentManager.beginTransaction()
+                        .setCustomAnimations(enterAnim, exitAnim) // Применение анимации
                         .replace(R.id.main_container, FavoritesFragment())
                         .commit()
                     true
                 }
 
                 R.id.home -> {
-                    // Переход на главный фрагмент
                     supportFragmentManager.beginTransaction()
+                        .setCustomAnimations(enterAnim, exitAnim)
                         .replace(R.id.main_container, HomeFragment())
+                        .commit()
                     true
                 }
 
-                else -> false // Неизвестный пункт - не обрабатываем
+                else -> false
             }
         }
     }
 
-    // Запуск активити с деталями фильма
+    // Запуск экрана деталей фильма
     fun launchDetailsActivity(film: Film) {
         startActivity(Intent(this, DetailsActivity::class.java).apply {
-            putExtra("film", film) // Передаём фильм через Intent
+            putExtra("film", film) // Передача объекта фильма
         })
     }
 
-    // Анимация выбранного элемента меню
+    // Анимация иконки при нажатии
     private fun animateIcon(item: MenuItem) {
-        val view = findViewById<View>(item.itemId)
-        view.animate()
-            .scaleX(0.8f) // Уменьшение по X
-            .scaleY(0.8f) // Уменьшение по Y
-            .translationYBy(-20f) // Сдвиг вверх
-            .setDuration(500) // Длительность анимации
-            .withEndAction { // Обратный эффект после завершения
+        val view = binding.bottomNavigation.findViewById<View>(item.itemId)
+        view?.animate()
+            ?.scaleX(0.8f)    // Уменьшение по X
+            ?.scaleY(0.8f)    // Уменьшение по Y
+            ?.translationYBy(-20f) // Сдвиг вверх
+            ?.setDuration(500)
+            ?.withEndAction {
+                // Обратная анимация
                 view.animate()
-                    .scaleX(1f) // Возврат к исходному размеру
+                    .scaleX(1f)
                     .scaleY(1f)
-                    .translationYBy(20f) // Возврат в исходную позицию
+                    .translationYBy(20f)
                     .setDuration(500)
+                    .start()
             }
-            .start()
-    }
-
-    private fun showFavorites() {
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.main_container, FavoritesFragment())
-            .commit()
-    }
-
-    private fun showHome() {
-        supportFragmentManager.findFragmentById(R.id.main_container)?.let {
-            supportFragmentManager.beginTransaction().remove(it).commit()
-        }
-        // Возвращаем выбор на Home
-        binding.bottomNavigation.selectedItemId = R.id.home
+            ?.start()
     }
 }
-
-
-
-
-
 
 
 

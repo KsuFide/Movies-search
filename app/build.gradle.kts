@@ -45,6 +45,9 @@ android {
 
 dependencies {
 
+    implementation ("com.github.bumptech.glide:glide:4.11.0")
+    annotationProcessor ("com.github.bumptech.glide:compiler:4.11.0")
+
     implementation ("org.jetbrains.kotlin:kotlin-stdlib:1.9.20")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
