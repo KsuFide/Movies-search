@@ -1,35 +1,41 @@
 package com.example.moviesearch
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.transition.Scene
+import androidx.transition.Slide
+import androidx.transition.TransitionManager
+import androidx.transition.TransitionSet
 import com.example.moviesearch.databinding.FragmentHomeBinding
 import java.util.Locale
 
-// Фрагмент для отображения главного экрана с списком фильмов
 class HomeFragment : Fragment() {
 
-    // View Binding переменные (нужны для безопасного доступа к view)
+    // View Binding
     private var _binding: FragmentHomeBinding? = null
-    private val binding get() = _binding!! // Геттер для non-null binding
+    private val binding get() = _binding!!
 
-    // Адаптер для RecyclerView
     private lateinit var filmsAdapter: FilmListRecyclerAdapter
+    private val allFilms = Data.films
 
-    private val allFilms = Data.films // Полный список фильмов
+    // Элементы из отдельной разметки (merge_home_screen_content)
+    private lateinit var searchView: SearchView
+    private lateinit var mainRecycler: RecyclerView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        // Инициализация View Binding
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -37,110 +43,117 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Находим EditText внутри SearchView
-        val searchEditText =
-            binding.searchView.findViewById<EditText>(androidx.appcompat.R.id.search_src_text)
+        // 1. Создание сцены для анимации
+        val scene = Scene.getSceneForLayout(
+            binding.homeFragmentRoot,    // Корневой контейнер
+            R.layout.merge_home_screen_content, // Разметка контента
+            requireContext()
+        )
 
-        // Устанавливаем цвета
+        // 2. Создание кастомной анимации
+        val searchSlide = Slide(Gravity.TOP).addTarget(R.id.search_view)    // Анимация поиска сверху
+        val recyclerSlide = Slide(Gravity.BOTTOM).addTarget(R.id.main_recycler) // Анимация списка снизу
+
+        val customTransition = TransitionSet().apply {
+            duration = 500 // Длительность анимации
+            addTransition(recyclerSlide)
+            addTransition(searchSlide)
+        }
+
+        // 3. Запуск анимации сцены
+        TransitionManager.go(scene, customTransition)
+
+        // 4. Инициализация элементов после анимации
+        searchView = binding.homeFragmentRoot.findViewById(R.id.search_view)
+        mainRecycler = binding.homeFragmentRoot.findViewById(R.id.main_recycler)
+
+        // Настройка цвета текста в поиске
+        val searchEditText = searchView.findViewById<EditText>(androidx.appcompat.R.id.search_src_text)
         searchEditText.setTextColor(ContextCompat.getColor(requireContext(), R.color.black))
 
-        setupRecycler() // Настравиаем RecyclerView
-        setupSearchView() // Настраиваем поиск
+        // Настройка компонентов
+        setupRecycler()
+        setupSearchView()
 
-        // Нажатие на поле, а не только на иконку
-        binding.searchView.setOnClickListener {
-            binding.searchView.isIconified = false
+        // Раскрытие поиска при клике
+        searchView.setOnClickListener {
+            searchView.isIconified = false
         }
     }
 
-
-    // Настройка RecyclerView и его адаптера
     private fun setupRecycler() {
-        // Создаём адаптер с лямдой-обработчиком кликов
+        // Создание адаптера с обработчиком клика
         filmsAdapter = FilmListRecyclerAdapter { film ->
-            // При клике на фильм запускаем DetailsActivity через MaimActivity
             (activity as? MainActivity)?.launchDetailsActivity(film)
         }
 
-        // Настраиваем RecyclerView
-        binding.mainRecycler.apply {
-            adapter = filmsAdapter // Устанавливаем адаптер
-            layoutManager = LinearLayoutManager(requireContext()) // Линейный макет
-            addItemDecoration(TopSpacingItemDecoration(8)) // Декоратор для отступов
+        // Настройка RecyclerView
+        mainRecycler.apply {
+            adapter = filmsAdapter
+            layoutManager = LinearLayoutManager(requireContext())
+            addItemDecoration(TopSpacingItemDecoration(8)) // Добавление отступов
 
-            // Добавляем  слушатель скролла
+            // Обработчик скролла для скрытия/показа поиска
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
-
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-
                     val scrollThreshold = 20
-
                     when {
-                        dy > scrollThreshold -> hideSearchView() // Скролл вниз
-                        dy < -scrollThreshold -> showSearchView() // Скролл вверх
+                        // Скролл вниз - скрыть поиск
+                        dy > scrollThreshold -> hideSearchView()
+                        // Скролл вверх - показать поиск
+                        dy < -scrollThreshold -> showSearchView()
                     }
                 }
             })
         }
-        // Загружаем данные в адаптер
-        filmsAdapter.submitList(allFilms)
+        filmsAdapter.submitList(allFilms) // Установка данных
     }
 
     private fun hideSearchView() {
-        binding.searchView.animate()
-            .translationY(-binding.searchView.height.toFloat())
-            .alpha(0f)
+        // Анимация скрытия поиска
+        searchView.animate()
+            .translationY(-searchView.height.toFloat()) // Сдвиг вверх
+            .alpha(0f)                                  // Исчезновение
             .setDuration(300)
-            .withEndAction { binding.searchView.visibility = View.GONE }
+            .withEndAction { searchView.visibility = View.GONE }
     }
 
     private fun showSearchView() {
-        binding.searchView.visibility = View.VISIBLE
-        binding.searchView.animate()
-            .translationY(0f)
-            .alpha(1f)
+        // Анимация показа поиска
+        searchView.visibility = View.VISIBLE
+        searchView.animate()
+            .translationY(0f)   // Возврат на место
+            .alpha(1f)          // Появление
             .setDuration(300)
     }
 
     private fun setupSearchView() {
+        // Обработчик поисковых запросов
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            // При отправке запроса
+            override fun onQueryTextSubmit(query: String?): Boolean = true
 
-        // Получаем доступ к внутреннему EditText
-        val searchEditText =
-            binding.searchView.findViewById<EditText>(androidx.appcompat.R.id.search_src_text)
-
-
-        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            // Этот метод отрабатывает при нажатии на "поиск" на софт на клавиатуре
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                return true
-            }
-
-            // Этот метод отрабатывает на каждое изменение текста
+            // При изменении текста
             override fun onQueryTextChange(newText: String?): Boolean {
-                // Проверяем на null
                 val searchText = newText ?: ""
-
-                // Если ввод пуст то вставляем в адаптер всю БД
                 if (searchText.isEmpty()) {
+                    // Показать все фильмы если запрос пустой
                     filmsAdapter.addItems(allFilms)
-                    return true
+                } else {
+                    // Фильтрация по названию (без учета регистра)
+                    val result = allFilms.filter {
+                        it.title.toLowerCase(Locale.getDefault())
+                            .contains(searchText.toLowerCase(Locale.getDefault()))
+                    }
+                    filmsAdapter.addItems(result)
                 }
-                // Фильтруем список на поиск подходящих сочетаний
-                val result = allFilms.filter {
-                    // Чтобы всё работало правильно, нужно и запрос, и имя фильма приводить к нижнему регистру
-                    it.title.toLowerCase(Locale.getDefault())
-                        .contains(searchText.toLowerCase(Locale.getDefault()))
-                }
-                // Добавляем адаптер
-                filmsAdapter.addItems(result)
                 return true
             }
         })
     }
 
-    // Очистка binding при уничтожении view для избежания утечек памяти
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null
+        _binding = null // Очистка binding для предотвращения утечек памяти
     }
 }
