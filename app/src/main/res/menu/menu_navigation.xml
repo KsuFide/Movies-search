@@ -9,15 +9,16 @@
         app:showAsAction="withText" />
 
     <item
+        android:id="@+id/home"
+        android:icon="@drawable/ic_home"
+        android:title="Главная"
+        app:showAsAction="withText" />
+
+    <item
         android:id="@+id/watch_later"
         android:icon="@drawable/baseline_watch_later_24"
         android:title="@string/btn_menu3"
         app:showAsAction="withText" />
 
-    <item
-        android:id="@+id/selections"
-        android:icon="@drawable/baseline_ondemand_video_24"
-        android:title="@string/btn_menu4"
-        app:showAsAction="withText" />
 
 </menu>

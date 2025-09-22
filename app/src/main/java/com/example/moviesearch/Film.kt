@@ -7,6 +7,7 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class Film(
     val title: String,
-    @DrawableRes val poster: Int,
-    val description: String
-) : Parcelable
+    @DrawableRes val poster: Int, // ID ресурса постера (аннотация для проверки)
+    val description: String, // Описание фильма
+    var isInFavorites: Boolean = false // Флаг избранного
+) : Parcelable // Реализация Parcelable для передачи между компонентами

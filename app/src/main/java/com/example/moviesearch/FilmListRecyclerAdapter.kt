@@ -1,24 +1,42 @@
 package com.example.moviesearch
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.example.moviesearch.databinding.FilmItemBinding
 
 // В параметр передаём слушатель, чтобы мы потом могли обрабатывать нажатия из класса Activity
 class FilmListRecyclerAdapter(
-    private val clickListener: OnItemClickListener
-) :
-    ListAdapter<Film, FilmListRecyclerAdapter.FilmViewHolder>(FilmDiffCallback()) {
+    private val clickListener: (Film) -> Unit,
+) : ListAdapter<Film, FilmListRecyclerAdapter.FilmViewHolder>(FilmDiffCallback()) {
 
-    // Интерфейс для обработки кликов
-    fun interface OnItemClickListener {
-        fun click(film: Film)
+    // ViewHolder для элемента списка
+    inner class FilmViewHolder(val binding: FilmItemBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+
+        fun bind(film: Film) {
+            with(binding) {
+                // Установка текстовых данных
+                title.text = film.title
+                description.text = film.description
+
+                // Используем Glide для загрузки изображений
+                Glide.with(itemView)
+                    .load(film.poster) // Загружаем ресурс
+                    .centerCrop()      // Центрируем и обрезаем
+                    .into(poster)      // Указываем ImageView
+
+                // Обработка клика на весь элемент
+                root.setOnClickListener { clickListener(film) }
+            }
+        }
     }
 
-    // В этом методе мы привязываем наш ViewHolder и передаём туда "надутую" верстку нашего фильма
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FilmViewHolder {
+        // Создание ViewHolder с помощью ViewBinding
         val binding = FilmItemBinding.inflate(
             LayoutInflater.from(parent.context),
             parent,
@@ -27,32 +45,14 @@ class FilmListRecyclerAdapter(
         return FilmViewHolder(binding)
     }
 
-    // В этом методе будет привязка полей из объекта Film к View из film.item.xml
     override fun onBindViewHolder(holder: FilmViewHolder, position: Int) {
-        // Проверяем какой у нас ViewHolder
-        // Вызываем метод bind(), который мы создали, и передаём туда объект
-        // из нашей базы данных с указанием позиции
+        // Привязка данных к ViewHolder
         holder.bind(getItem(position))
-        // Обрабатываем нажатие на весь элемент целиком(можно сделать на отдельный элемент
-        // например, картинку) и вызываем метод нашего листенера, который мы получаем из
-        // конструктора адаптера
-        holder.itemView.setOnClickListener {
-            clickListener.click(getItem(position))
-        }
+
     }
 
-    inner class FilmViewHolder(private val binding: FilmItemBinding) :
-        RecyclerView.ViewHolder(binding.root) {
-        // В этом методе кладём данные из Film в наш View
-        fun bind(film: Film) {
-            with(binding) {
-                // Устанавливаем заголовок
-                title.text = film.title
-                // Устанавливаем постер
-                poster.setImageResource(film.poster)
-                // Устанавливаем описание
-                description.text = film.description
-            }
-        }
+    // Обновление списка фильмов
+    fun addItems(items: List<Film>) {
+        submitList(items)
     }
 }
