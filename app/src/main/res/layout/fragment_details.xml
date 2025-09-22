@@ -44,41 +44,6 @@
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        android:orientation="horizontal"
-        app:layout_anchor="@id/app_bar"
-        app:layout_anchorGravity="right|top">
-
-        <ImageButton
-            android:id="@+id/favorite_btn"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginTop="30dp"
-            android:layout_marginEnd="5dp"
-            style="@style/icon_details"
-            android:contentDescription="@string/favorite_action"
-            android:scaleType="center"
-            android:src="@drawable/baseline_favorite_24"
-            app:background="@android:color/transparent" />
-
-        <ImageButton
-            android:id="@+id/watch_later_btn"
-            style="@style/icon_details"
-            android:layout_marginTop="30dp"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:contentDescription="@string/watch_later_action"
-            android:scaleType="center"
-            android:src="@drawable/baseline_watch_later_24"
-            app:background="@android:color/transparent" />
-
-
-    </LinearLayout>
-
-
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/details_fab"
         style="@style/RoundedShape"
@@ -89,6 +54,17 @@
         app:layout_anchor="@id/app_bar"
         app:layout_anchorGravity="bottom|right"
         app:srcCompat="@drawable/baseline_share_24" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/details_fab_favorites"
+        style="@style/RoundedShape"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="7dp"
+        android:backgroundTint="@color/colorPrimaryDark"
+        app:layout_anchor="@id/app_bar"
+        app:layout_anchorGravity="bottom|left"
+        app:srcCompat="@drawable/baseline_favorite_24" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"

@@ -1,120 +1,101 @@
 package com.example.moviesearch
 
 import android.content.Intent
-import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.moviesearch.databinding.ActivityMainBinding
-import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity() {
 
-    // View Binding для доступа к элементам интерфейса
     private lateinit var binding: ActivityMainBinding
-
-    // Адаптер для RecyclerView
-    private lateinit var filmsAdapter: FilmListRecyclerAdapter
-
-    // Флаги состояний для управления избранным и отложенным просмотром
-    private var isFavorite = false
-    private var isWatchLater = false
-
+    private var lastSelectedItemId: Int = R.id.home // Текущий выбранный пункт
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Инициализация View Binding
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Настройка RecyclerView с лямбдой-обработчиком кликов
-        filmsAdapter = FilmListRecyclerAdapter { film ->
-            // Создание интента для перехода на экран деталей
-            val intent = Intent(this, DetailsActivity::class.java).apply {
-                putExtra("film", film) // Передача объекта Film
-            }
-            startActivity(intent)
+        // Установка стартового фрагмента
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.main_container, HomeFragment())
+                .commit()
         }
 
-        // Конфигурация RecyclerView
-        binding.mainRecycler.apply {
-            adapter = filmsAdapter
-            layoutManager = LinearLayoutManager(this@MainActivity) // Линейный макет
-            addItemDecoration(TopSpacingItemDecoration(8)) // Декоратор для отступов
-        }
+        binding.bottomNavigation.selectedItemId = R.id.home
+        lastSelectedItemId = R.id.home
 
-        // Загрузка данных в RecyclerView
-        filmsAdapter.submitList(Data.films)
+        // Обработчик навигации
+        binding.bottomNavigation.setOnItemSelectedListener { item ->
+            // Анимация иконки
+            animateIcon(item)
 
-        // Настройка BottomNavigationView
-        with(binding.bottomNavigation) {
-            // Установка активного и неактивного цветов программно
-            val colorStates = ColorStateList(
-                arrayOf(
-                    intArrayOf(android.R.attr.state_checked), // Активное состояние
-                    intArrayOf(-android.R.attr.state_checked) // Неактивное
-                ),
-                intArrayOf(
-                    ContextCompat.getColor(context, R.color.white), // Активный цвет
-                    ContextCompat.getColor(context, R.color.button) // Неактивный цвет
-                )
-            )
-            itemIconTintList = colorStates
-            itemTextColor = colorStates
+            // Определение анимации перехода
+            val (enterAnim, exitAnim) = when {
+                // Home -> Favorites: вход справа, выход влево
+                item.itemId == R.id.favorites && lastSelectedItemId == R.id.home ->
+                    Pair(R.anim.slide_in_right, R.anim.slide_out_left)
 
-            // Обработка выбора пунктов меню
-            setOnItemSelectedListener { item ->
-                when (item.itemId) {
-                    R.id.favorites -> showSnackbar("Избранное")
-                    R.id.watch_later -> showSnackbar("Посмотреть позже")
-                    R.id.selections -> showSnackbar("Подборки")
-                    else -> return@setOnItemSelectedListener false
-                }
-                true // Возвращаем true для подтверждения выбора
+                // Favorites -> Home: вход слева, выход вправо
+                item.itemId == R.id.home && lastSelectedItemId == R.id.favorites ->
+                    Pair(R.anim.slide_in_left, R.anim.slide_out_right)
+
+                // Для других случаев - плавное появление
+                else -> Pair(R.anim.fade_in, R.anim.fade_out)
             }
 
-            // Анимация при нажатии
-            setOnItemSelectedListener { item ->
-                animateItemSelection(item)
-                true
-            }
-        }
+            lastSelectedItemId = item.itemId // Обновление текущего пункта
 
-        // Инициализация ToolBar
-        binding.appBarLayout.setOnMenuItemClickListener { item ->
+            // Обработка выбора пункта меню
             when (item.itemId) {
-                R.id.settings -> Toast.makeText(this, "Настройки", Toast.LENGTH_SHORT).show()
+                R.id.favorites -> {
+                    supportFragmentManager.beginTransaction()
+                        .setCustomAnimations(enterAnim, exitAnim) // Применение анимации
+                        .replace(R.id.main_container, FavoritesFragment())
+                        .commit()
+                    true
+                }
+
+                R.id.home -> {
+                    supportFragmentManager.beginTransaction()
+                        .setCustomAnimations(enterAnim, exitAnim)
+                        .replace(R.id.main_container, HomeFragment())
+                        .commit()
+                    true
+                }
+
+                else -> false
             }
-            true
         }
     }
 
-    // Анимация выбранного элемента меню
-    private fun animateItemSelection(item: MenuItem) {
-        val view = findViewById<View>(item.itemId)
-        view.animate()
-            .scaleX(0.8f) // Уменьшение по X
-            .scaleY(0.8f) // Уменьшение по Y
-            .translationYBy(-20f) // Сдвиг вверх
-            .setDuration(500) // Длительность анимации
-            .withEndAction { // Обратный эффект после завершения
-                view.animate()
-                    .scaleX(1f) // Возврат к исходному размеру
-                    .scaleY(1f)
-                    .translationYBy(20f) // Возврат в исходную позицию
-                    .setDuration(500)
-            }
-            .start()
+    // Запуск экрана деталей фильма
+    fun launchDetailsActivity(film: Film) {
+        startActivity(Intent(this, DetailsActivity::class.java).apply {
+            putExtra("film", film) // Передача объекта фильма
+        })
     }
 
-    // Показ всплывающих уведомлений
-    private fun showSnackbar(message: String) {
-        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+    // Анимация иконки при нажатии
+    private fun animateIcon(item: MenuItem) {
+        val view = binding.bottomNavigation.findViewById<View>(item.itemId)
+        view?.animate()
+            ?.scaleX(0.8f)    // Уменьшение по X
+            ?.scaleY(0.8f)    // Уменьшение по Y
+            ?.translationYBy(-20f) // Сдвиг вверх
+            ?.setDuration(500)
+            ?.withEndAction {
+                // Обратная анимация
+                view.animate()
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .translationYBy(20f)
+                    .setDuration(500)
+                    .start()
+            }
+            ?.start()
     }
 }
 
