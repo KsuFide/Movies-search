@@ -1,7 +1,6 @@
 package com.example.moviesearch
 
 import android.os.Bundle
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,10 +10,6 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.transition.Scene
-import androidx.transition.Slide
-import androidx.transition.TransitionManager
-import androidx.transition.TransitionSet
 import com.example.moviesearch.databinding.FragmentHomeBinding
 import java.util.Locale
 
@@ -27,15 +22,10 @@ class HomeFragment : Fragment() {
     private lateinit var filmsAdapter: FilmListRecyclerAdapter
     private val allFilms = Data.films
 
-    // Элементы из отдельной разметки (merge_home_screen_content)
-    private lateinit var searchView: SearchView
-    private lateinit var mainRecycler: RecyclerView
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Инициализация View Binding
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -43,32 +33,14 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. Создание сцены для анимации
-        val scene = Scene.getSceneForLayout(
-            binding.homeFragmentRoot,    // Корневой контейнер
-            R.layout.merge_home_screen_content, // Разметка контента
-            requireContext()
-        )
+        // Запускаем анимацию circular reveal
+        AnimationHelper.performFragmentCircularRevealAnimation(binding.homeFragmentRoot, requireActivity(), 1)
 
-        // 2. Создание кастомной анимации
-        val searchSlide = Slide(Gravity.TOP).addTarget(R.id.search_view)    // Анимация поиска сверху
-        val recyclerSlide = Slide(Gravity.BOTTOM).addTarget(R.id.main_recycler) // Анимация списка снизу
-
-        val customTransition = TransitionSet().apply {
-            duration = 500 // Длительность анимации
-            addTransition(recyclerSlide)
-            addTransition(searchSlide)
-        }
-
-        // 3. Запуск анимации сцены
-        TransitionManager.go(scene, customTransition)
-
-        // 4. Инициализация элементов после анимации
-        searchView = binding.homeFragmentRoot.findViewById(R.id.search_view)
-        mainRecycler = binding.homeFragmentRoot.findViewById(R.id.main_recycler)
+        // Убеждаемся, что корневое view видимо
+        binding.homeFragmentRoot.visibility = View.VISIBLE
 
         // Настройка цвета текста в поиске
-        val searchEditText = searchView.findViewById<EditText>(androidx.appcompat.R.id.search_src_text)
+        val searchEditText = binding.searchView.findViewById<EditText>(androidx.appcompat.R.id.search_src_text)
         searchEditText.setTextColor(ContextCompat.getColor(requireContext(), R.color.black))
 
         // Настройка компонентов
@@ -76,8 +48,8 @@ class HomeFragment : Fragment() {
         setupSearchView()
 
         // Раскрытие поиска при клике
-        searchView.setOnClickListener {
-            searchView.isIconified = false
+        binding.searchView.setOnClickListener {
+            binding.searchView.isIconified = false
         }
     }
 
@@ -88,10 +60,10 @@ class HomeFragment : Fragment() {
         }
 
         // Настройка RecyclerView
-        mainRecycler.apply {
+        binding.mainRecycler.apply {
             adapter = filmsAdapter
             layoutManager = LinearLayoutManager(requireContext())
-            addItemDecoration(TopSpacingItemDecoration(8)) // Добавление отступов
+            addItemDecoration(TopSpacingItemDecoration(8))
 
             // Обработчик скролла для скрытия/показа поиска
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -106,41 +78,34 @@ class HomeFragment : Fragment() {
                 }
             })
         }
-        filmsAdapter.submitList(allFilms) // Установка данных
+        filmsAdapter.submitList(allFilms)
     }
 
     private fun hideSearchView() {
-        // Анимация скрытия поиска
-        searchView.animate()
-            .translationY(-searchView.height.toFloat()) // Сдвиг вверх
-            .alpha(0f)                                  // Исчезновение
+        binding.searchView.animate()
+            .translationY(-binding.searchView.height.toFloat())
+            .alpha(0f)
             .setDuration(300)
-            .withEndAction { searchView.visibility = View.GONE }
+            .withEndAction { binding.searchView.visibility = View.GONE }
     }
 
     private fun showSearchView() {
-        // Анимация показа поиска
-        searchView.visibility = View.VISIBLE
-        searchView.animate()
-            .translationY(0f)   // Возврат на место
-            .alpha(1f)          // Появление
+        binding.searchView.visibility = View.VISIBLE
+        binding.searchView.animate()
+            .translationY(0f)
+            .alpha(1f)
             .setDuration(300)
     }
 
     private fun setupSearchView() {
-        // Обработчик поисковых запросов
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            // При отправке запроса
+        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean = true
 
-            // При изменении текста
             override fun onQueryTextChange(newText: String?): Boolean {
                 val searchText = newText ?: ""
                 if (searchText.isEmpty()) {
-                    // Показать все фильмы если запрос пустой
                     filmsAdapter.addItems(allFilms)
                 } else {
-                    // Фильтрация по названию (без учета регистра)
                     val result = allFilms.filter {
                         it.title.toLowerCase(Locale.getDefault())
                             .contains(searchText.toLowerCase(Locale.getDefault()))
@@ -154,6 +119,6 @@ class HomeFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null // Очистка binding для предотвращения утечек памяти
+        _binding = null
     }
 }

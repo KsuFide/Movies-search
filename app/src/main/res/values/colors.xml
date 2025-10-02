@@ -10,5 +10,6 @@
     <color name="colorAccent">#0A72A6</color>
     <color name="red">#FF0000</color>
     <color name="blue">#03A9F4</color>
+    <color name="splash_screen_background">#2C622E</color>
 
 </resources>

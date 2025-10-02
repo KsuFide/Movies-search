@@ -6,11 +6,11 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.moviesearch.databinding.FragmentFavoritesBinding
+import com.example.moviesearch.databinding.FragmentCollectionsBinding
 
-class FavoritesFragment : Fragment() {
+class CollectionsFragment : Fragment() {
 
-    private var _binding: FragmentFavoritesBinding? = null
+    private var _binding: FragmentCollectionsBinding? = null
     private val binding get() = _binding!!
     private lateinit var filmsAdapter: FilmListRecyclerAdapter
 
@@ -18,7 +18,7 @@ class FavoritesFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        _binding = FragmentFavoritesBinding.inflate(inflater, container, false)
+        _binding = FragmentCollectionsBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -26,7 +26,7 @@ class FavoritesFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // Запускаем анимацию circular reveal
-        AnimationHelper.performFragmentCircularRevealAnimation(binding.homeFragmentRoot, requireActivity(), 2)
+        AnimationHelper.performFragmentCircularRevealAnimation(binding.homeFragmentRoot, requireActivity(), 4)
 
         binding.homeFragmentRoot.visibility = View.VISIBLE
 
@@ -35,31 +35,14 @@ class FavoritesFragment : Fragment() {
         }
 
         // Настройка RecyclerView
-        binding.favoritesRecycler.apply {
+        binding.collectionsRecycler.apply {
             adapter = filmsAdapter
             layoutManager = LinearLayoutManager(requireContext())
             addItemDecoration(TopSpacingItemDecoration(8))
         }
 
-        loadFavorites()
-    }
+        // Загружаем все фильмы для подборок (можно изменить логику)
 
-    private fun loadFavorites() {
-        val favorites = Database.getFavoriteFilms()
-        filmsAdapter.submitList(favorites)
-
-        if (favorites.isEmpty()) {
-            binding.emptyState.visibility = View.VISIBLE
-            binding.favoritesRecycler.visibility = View.GONE
-        } else {
-            binding.emptyState.visibility = View.GONE
-            binding.favoritesRecycler.visibility = View.VISIBLE
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        loadFavorites()
     }
 
     override fun onDestroyView() {

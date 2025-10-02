@@ -7,30 +7,23 @@
     android:layout_height="match_parent"
     android:visibility="invisible"
     tools:visibility="visible"
-    android:background="@drawable/background_favorites"
-    tools:context=".FavoritesFragment">
+    android:background="@drawable/background_watch_later"
+    tools:context=".WatchLaterFragment">
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/favorites_recycler"
+        android:id="@+id/watch_later_recycler"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:padding="8dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         tools:listitem="@layout/film_item" />
 
-    <LinearLayout
-        android:id="@+id/empty_state"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:visibility="gone">
+    <TextView
+        android:id="@+id/empty_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="Список 'Посмотреть позже' пуст"
+        android:textSize="24sp" />
 
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Список 'Избранное' пуст"
-            android:textSize="24sp" />
-    </LinearLayout>
 </FrameLayout>
