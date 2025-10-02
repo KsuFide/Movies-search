@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <style name="AppToolbar" parent="Widget.MaterialComponents.Toolbar.Primary">
+        <item name="android:background">?attr/colorPrimaryDark</item>
+        <item name="titleTextColor">@android:color/white</item>
+        <item name="subtitleTextColor">@android:color/white</item>
+        <item name="android:elevation">8dp</item>
+    </style>
+
     <style name="Button" parent="Theme.MaterialComponents.Light.DarkActionBar">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">0dp</item>
@@ -29,10 +36,16 @@
     </style>
 
 
-        <style name="MyDialog" parent="Theme.AppCompat.Dialog.Alert">
-            <item name="android:background">#028072</item>
-            <item name="android:textColor">@android:color/white</item>
-        </style>
+    <style name="MyDialog" parent="Theme.AppCompat.Dialog.Alert">
+        <item name="android:background">#028072</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
+    <style name="MyAppBarStyle" parent="Widget.MaterialComponents.AppBarLayout.Primary">
+        <item name="android:background">?attr/colorPrimaryDark</item>
+        <item name="android:elevation">8dp</item>
+    </style>
+
 
 
 </resources>

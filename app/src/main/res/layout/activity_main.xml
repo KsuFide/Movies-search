@@ -6,13 +6,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    android:background="@drawable/corner_background"
+    android:background="@drawable/background_home"
     tools:context=".MainActivity">
 
     <!-- Toolbar верхнее меню -->
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout2"
         android:layout_width="0dp"
+        android:background="@color/colorPrimaryDark"
+        android:backgroundTint="@null"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

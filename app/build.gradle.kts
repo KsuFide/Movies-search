@@ -47,6 +47,8 @@ dependencies {
 
     implementation ("com.github.bumptech.glide:glide:4.11.0")
     annotationProcessor ("com.github.bumptech.glide:compiler:4.11.0")
+    implementation("androidx.core:core-splashscreen:1.0.1")
+    implementation("com.google.android.material:material:1.11.0")
 
     implementation ("org.jetbrains.kotlin:kotlin-stdlib:1.9.20")
     implementation(libs.androidx.core.ktx)

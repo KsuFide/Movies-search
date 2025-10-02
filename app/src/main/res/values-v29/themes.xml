@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+        <style name="Base.Theme.MovieSearch" parent="Theme.Material3.Dark.NoActionBar">
+                <!-- Основные цвета -->
+                <item name="colorPrimaryDark">#004B42</item>
+                <item name="colorPrimaryVariant">#128A8D</item>
+                <item name="colorOnPrimary">@android:color/white</item>
+
+                <!-- Цвета поверхности -->
+                <item name="colorSurface">#1E1E1E</item>
+                <item name="colorOnSurface">@android:color/white</item>
+
+                <!-- ОТКЛЮЧЕНИЕ ДИНАМИЧЕСКИХ ЦВЕТОВ -->
+                <item name="android:forceDarkAllowed">false</item>
+
+                <!-- Цвета для AppBar -->
+                <item name="android:statusBarColor">@color/colorPrimaryDark</item>
+                <item name="android:navigationBarColor">?attr/colorSurface</item>
+
+        </style>
+</resources>
