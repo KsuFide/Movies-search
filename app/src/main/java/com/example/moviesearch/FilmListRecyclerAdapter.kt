@@ -1,7 +1,6 @@
 package com.example.moviesearch
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -28,6 +27,9 @@ class FilmListRecyclerAdapter(
                     .load(film.poster) // Загружаем ресурс
                     .centerCrop()      // Центрируем и обрезаем
                     .into(poster)      // Указываем ImageView
+                // Устанавливаем рейтинг с анимацией
+                val ratingProgress = (film.rating * 10).toInt()
+                ratingDonut.setProgress(ratingProgress, animate = true)
 
                 // Обработка клика на весь элемент
                 root.setOnClickListener { clickListener(film) }
