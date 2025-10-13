@@ -1,16 +1,25 @@
-package com.example.moviesearch
+package com.example.moviesearch.view.fragments
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import androidx.appcompat.R
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.moviesearch.view.MainActivity
+import com.example.moviesearch.view.adapters.FilmListRecyclerAdapter
 import com.example.moviesearch.databinding.FragmentHomeBinding
+import com.example.moviesearch.domain.Film
+import com.example.moviesearch.utils.AnimationHelper
+import com.example.moviesearch.view.adapters.TopSpacingItemDecoration
+import com.example.moviesearch.viewmodel.HomeFragmentViewModel
 import java.util.Locale
 
 class HomeFragment : Fragment() {
@@ -18,9 +27,20 @@ class HomeFragment : Fragment() {
     // View Binding
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
-
     private lateinit var filmsAdapter: FilmListRecyclerAdapter
-    private val allFilms = Data.films
+
+    // Добавляем ViewModel
+    private val viewModel by lazy {
+        ViewModelProvider.NewInstanceFactory().create(HomeFragmentViewModel::class.java)
+    }
+
+    // Переменная для данных с backing field
+    private var filmsDataBase = listOf<Film>()
+        set(value) {
+            if (field == value) return
+            field = value
+            filmsAdapter.addItems(field)
+        }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -40,18 +60,25 @@ class HomeFragment : Fragment() {
         binding.homeFragmentRoot.visibility = View.VISIBLE
 
         // Настройка цвета текста в поиске
-        val searchEditText = binding.searchView.findViewById<EditText>(androidx.appcompat.R.id.search_src_text)
-        searchEditText.setTextColor(ContextCompat.getColor(requireContext(), R.color.black))
+        val searchEditText = binding.searchView.findViewById<EditText>(R.id.search_src_text)
+        searchEditText.setTextColor(ContextCompat.getColor(requireContext(), com.example.moviesearch.R.color.black))
 
         // Настройка компонентов
         setupRecycler()
         setupSearchView()
+
+        // Подписываемся на изменения в ViewModel
+        viewModel.filmsListLiveData.observe(viewLifecycleOwner, Observer<List<Film>> {
+            filmsDataBase = it
+        })
 
         // Раскрытие поиска при клике
         binding.searchView.setOnClickListener {
             binding.searchView.isIconified = false
         }
     }
+
+
 
     private fun setupRecycler() {
         // Создание адаптера с обработчиком клика
@@ -78,7 +105,6 @@ class HomeFragment : Fragment() {
                 }
             })
         }
-        filmsAdapter.submitList(allFilms)
     }
 
     private fun hideSearchView() {
@@ -104,9 +130,9 @@ class HomeFragment : Fragment() {
             override fun onQueryTextChange(newText: String?): Boolean {
                 val searchText = newText ?: ""
                 if (searchText.isEmpty()) {
-                    filmsAdapter.addItems(allFilms)
+                    filmsAdapter.addItems(filmsDataBase)
                 } else {
-                    val result = allFilms.filter {
+                    val result = filmsDataBase.filter {
                         it.title.toLowerCase(Locale.getDefault())
                             .contains(searchText.toLowerCase(Locale.getDefault()))
                     }

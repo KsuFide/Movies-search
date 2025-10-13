@@ -8,7 +8,7 @@
     android:visibility="invisible"
     tools:visibility="visible"
     android:background="@drawable/background_collections"
-    tools:context=".CollectionsFragment">
+    tools:context=".view.fragments.CollectionsFragment">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/collections_recycler"

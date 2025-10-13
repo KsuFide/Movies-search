@@ -1,4 +1,4 @@
-package com.example.moviesearch
+package com.example.moviesearch.utils
 
 import android.app.Activity
 import android.view.View
@@ -35,7 +35,13 @@ object AnimationHelper {
                         val startRadius = 0
                         val endRadius = hypot(rootView.width.toDouble(), rootView.height.toDouble())
                         // Создаем саму анимацию
-                        val anim = ViewAnimationUtils.createCircularReveal(rootView, x, y, startRadius.toFloat(), endRadius.toFloat())
+                        val anim = ViewAnimationUtils.createCircularReveal(
+                            rootView,
+                            x,
+                            y,
+                            startRadius.toFloat(),
+                            endRadius.toFloat()
+                        )
                         // Устанавливаем время анимации
                         anim.duration = 500
                         // Интерполятор для более естественной анимации

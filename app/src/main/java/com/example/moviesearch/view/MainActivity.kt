@@ -1,4 +1,4 @@
-package com.example.moviesearch
+package com.example.moviesearch.view
 
 import android.content.Intent
 import android.graphics.Color
@@ -10,7 +10,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.Fragment
+import com.example.moviesearch.R
 import com.example.moviesearch.databinding.ActivityMainBinding
+import com.example.moviesearch.domain.Film
+import com.example.moviesearch.view.fragments.CollectionsFragment
+import com.example.moviesearch.view.DetailsActivity
+import com.example.moviesearch.view.fragments.FavoritesFragment
+import com.example.moviesearch.view.fragments.HomeFragment
+import com.example.moviesearch.view.fragments.WatchLaterFragment
 
 class MainActivity : AppCompatActivity() {
 
@@ -162,9 +169,3 @@ class MainActivity : AppCompatActivity() {
             ?.start()
     }
 }
-
-
-
-
-
-

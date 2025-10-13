@@ -1,4 +1,4 @@
-package com.example.moviesearch
+package com.example.moviesearch.domain
 
 import android.os.Parcelable
 import androidx.annotation.DrawableRes

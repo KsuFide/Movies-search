@@ -1,7 +1,10 @@
-package com.example.moviesearch
+package com.example.moviesearch.data
+
+import com.example.moviesearch.domain.Film
 
 object Database {
-    private val allFilms = Data.films.toMutableList()
+    // Используем данные из MainRepository вместо Data
+    private val allFilms = MainRepository().filmsDataBase.toMutableList()
     private val favoriteFilms = mutableListOf<Film>()
 
     // Получить все фильмы

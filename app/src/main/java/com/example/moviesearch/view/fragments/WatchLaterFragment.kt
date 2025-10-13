@@ -1,13 +1,16 @@
-package com.example.moviesearch
+package com.example.moviesearch.view.fragments
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewAnimationUtils
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.moviesearch.view.adapters.FilmListRecyclerAdapter
+import com.example.moviesearch.view.MainActivity
+import com.example.moviesearch.view.adapters.TopSpacingItemDecoration
 import com.example.moviesearch.databinding.FragmentWatchLaterBinding
+import com.example.moviesearch.utils.AnimationHelper
 
 
 class WatchLaterFragment : Fragment() {

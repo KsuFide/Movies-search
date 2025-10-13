@@ -5,17 +5,14 @@
     android:layout_width="match_parent"
     android:layout_height="150dp">
 
-    <com.example.moviesearch.RatingDonutView
+    <com.example.moviesearch.view.customviews.RatingDonutView
         android:id="@+id/rating_donut"
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:translationZ="11dp"
         app:stroke="10"
         app:progress="77"
-        android:layout_gravity="bottom|left"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"/>
+        android:layout_gravity="bottom|left" />
 
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"

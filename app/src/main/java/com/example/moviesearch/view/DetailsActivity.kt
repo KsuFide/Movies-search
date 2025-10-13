@@ -1,14 +1,18 @@
-package com.example.moviesearch
+package com.example.moviesearch.view
 
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.example.moviesearch.data.Database
+import com.example.moviesearch.R
 import com.example.moviesearch.databinding.FragmentDetailsBinding
+import com.example.moviesearch.domain.Film
 import com.google.android.material.shape.CornerFamily
 import com.google.android.material.shape.ShapeAppearanceModel
 import com.google.android.material.snackbar.Snackbar
+
 
 class DetailsActivity : AppCompatActivity() {
 
@@ -121,7 +125,7 @@ class DetailsActivity : AppCompatActivity() {
                 setAction(text) { undoAction() }
             }
             // Привязываем Snackbar к FAB для правильного позиционирования
-            anchorView = binding.detailsFab
+            setAnchorView(binding.detailsFab)
         }.show()
     }
 }
