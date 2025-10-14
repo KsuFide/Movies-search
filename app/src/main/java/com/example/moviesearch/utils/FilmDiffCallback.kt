@@ -1,6 +1,7 @@
-package com.example.moviesearch
+package com.example.moviesearch.utils
 
 import androidx.recyclerview.widget.DiffUtil
+import com.example.moviesearch.domain.Film
 
 class FilmDiffCallback : DiffUtil.ItemCallback<Film>() {
     // Проверка на одинаковость объектов по уникальному индефикатору
