@@ -5,8 +5,10 @@ import android.content.res.ColorStateList
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.bumptech.glide.Glide
 import com.example.moviesearch.data.Database
 import com.example.moviesearch.R
+import com.example.moviesearch.data.ApiConstants
 import com.example.moviesearch.databinding.FragmentDetailsBinding
 import com.example.moviesearch.domain.Film
 import com.google.android.material.shape.CornerFamily
@@ -51,8 +53,13 @@ class DetailsActivity : AppCompatActivity() {
         with(binding) {
             // Устанавливаем заголовок
             detailsToolbar.title = film.title
-            // Устанавливаем картинку
-            detailsPoster.setImageResource(film.poster)
+
+            // Загрузка изображения через Glide
+            Glide.with(this@DetailsActivity)
+                .load("${ApiConstants.IMAGES_URL}w780${film.poster}")
+                .centerCrop()
+                .into(detailsPoster)
+
             // Устанавливаем описание
             detailsDescription.text = film.description
 
