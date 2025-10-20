@@ -1,46 +1,41 @@
 package com.example.moviesearch.view.fragments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
-import androidx.appcompat.R
-import androidx.appcompat.widget.SearchView
-import androidx.core.content.ContextCompat
+import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.example.moviesearch.view.MainActivity
+import com.example.moviesearch.data.MainRepository
+import com.example.moviesearch.data.api.Database
 import com.example.moviesearch.view.adapters.FilmListRecyclerAdapter
+import com.example.moviesearch.view.MainActivity
+import com.example.moviesearch.view.adapters.TopSpacingItemDecoration
 import com.example.moviesearch.databinding.FragmentHomeBinding
 import com.example.moviesearch.domain.Film
+import com.example.moviesearch.domain.Interactor
 import com.example.moviesearch.utils.AnimationHelper
-import com.example.moviesearch.view.adapters.TopSpacingItemDecoration
-import com.example.moviesearch.viewmodel.HomeFragmentViewModel
-import java.util.Locale
+import com.example.moviesearch.utils.PaginationScrollListener
 
 class HomeFragment : Fragment() {
 
-    // View Binding
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private lateinit var filmsAdapter: FilmListRecyclerAdapter
+    private val interactor = Interactor(MainRepository())
 
-    // Добавляем ViewModel
-    private val viewModel by lazy {
-        ViewModelProvider.NewInstanceFactory().create(HomeFragmentViewModel::class.java)
-    }
+    // Переменные для пагинации и поиска
+    private var currentPage = 1
+    private var totalPages = 1
+    private var isLoading = false
+    private val allFilms = mutableListOf<Film>()
+    private lateinit var paginationScrollListener: PaginationScrollListener
 
-    // Переменная для данных с backing field
-    private var filmsDataBase = listOf<Film>()
-        set(value) {
-            if (field == value) return
-            field = value
-            filmsAdapter.addItems(field)
-        }
+    // Переменные для поиска
+    private var isSearchMode = false
+    private var currentSearchQuery = ""
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -53,98 +48,200 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Запускаем анимацию circular reveal
         AnimationHelper.performFragmentCircularRevealAnimation(binding.homeFragmentRoot, requireActivity(), 1)
-
-        // Убеждаемся, что корневое view видимо
         binding.homeFragmentRoot.visibility = View.VISIBLE
 
-        // Настройка цвета текста в поиске
-        val searchEditText = binding.searchView.findViewById<EditText>(R.id.search_src_text)
-        searchEditText.setTextColor(ContextCompat.getColor(requireContext(), com.example.moviesearch.R.color.black))
-
-        // Настройка компонентов
-        setupRecycler()
-        setupSearchView()
-
-        // Подписываемся на изменения в ViewModel
-        viewModel.filmsListLiveData.observe(viewLifecycleOwner, Observer<List<Film>> {
-            filmsDataBase = it
-        })
-
-        // Раскрытие поиска при клике
-        binding.searchView.setOnClickListener {
-            binding.searchView.isIconified = false
-        }
-    }
-
-
-
-    private fun setupRecycler() {
-        // Создание адаптера с обработчиком клика
+        // Инициализация адаптера
         filmsAdapter = FilmListRecyclerAdapter { film ->
             (activity as? MainActivity)?.launchDetailsActivity(film)
         }
 
         // Настройка RecyclerView
+        val layoutManager = LinearLayoutManager(requireContext())
         binding.mainRecycler.apply {
             adapter = filmsAdapter
-            layoutManager = LinearLayoutManager(requireContext())
+            this.layoutManager = layoutManager
             addItemDecoration(TopSpacingItemDecoration(8))
-
-            // Обработчик скролла для скрытия/показа поиска
-            addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                    val scrollThreshold = 20
-                    when {
-                        // Скролл вниз - скрыть поиск
-                        dy > scrollThreshold -> hideSearchView()
-                        // Скролл вверх - показать поиск
-                        dy < -scrollThreshold -> showSearchView()
-                    }
-                }
-            })
         }
-    }
 
-    private fun hideSearchView() {
-        binding.searchView.animate()
-            .translationY(-binding.searchView.height.toFloat())
-            .alpha(0f)
-            .setDuration(300)
-            .withEndAction { binding.searchView.visibility = View.GONE }
-    }
+        // Инициализация пагинации
+        paginationScrollListener = PaginationScrollListener(layoutManager) {
+            loadNextPage()
+        }
+        binding.mainRecycler.addOnScrollListener(paginationScrollListener)
 
-    private fun showSearchView() {
-        binding.searchView.visibility = View.VISIBLE
-        binding.searchView.animate()
-            .translationY(0f)
-            .alpha(1f)
-            .setDuration(300)
+        // Настройка SearchView
+        setupSearchView()
+
+        // Загрузка первой страницы
+        loadFirstPage()
     }
 
     private fun setupSearchView() {
-        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean = true
+        binding.searchView.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                // Выполняем поиск при нажатии Enter
+                query?.let {
+                    if (it.length >= 2) {
+                        performSearch(it)
+                    } else {
+                        // Показываем подсказку о минимальной длине
+                        Toast.makeText(requireContext(), "Введите минимум 2 символа", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                return true
+            }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                val searchText = newText ?: ""
-                if (searchText.isEmpty()) {
-                    filmsAdapter.addItems(filmsDataBase)
-                } else {
-                    val result = filmsDataBase.filter {
-                        it.title.toLowerCase(Locale.getDefault())
-                            .contains(searchText.toLowerCase(Locale.getDefault()))
+                // Добавляем задержку для избежания частых запросов
+                newText?.let {
+                    when {
+                        it.length >= 3 -> {
+                            // Используем задержку для дебаунса
+                            binding.searchView.postDelayed({
+                                if (binding.searchView.query?.toString() == it) {
+                                    performSearch(it)
+                                }
+                            }, 500) // Задержка 500ms
+                        }
+                        it.isEmpty() -> {
+                            // Если строка поиска очищена, возвращаемся к популярным
+                            resetToPopular()
+                        }
+                        else -> {
+                            // Для строк длиной 1-2 символа ничего не делаем
+                            // Это заменяет отсутствующую ветку else в if-else
+                        }
                     }
-                    filmsAdapter.addItems(result)
                 }
                 return true
             }
         })
     }
 
+    private fun performSearch(query: String) {
+        if (query == currentSearchQuery) return // Не ищем тот же запрос повторно
+
+        currentSearchQuery = query
+        isSearchMode = true
+        loadFirstPage()
+
+        // Показываем индикатор поиска
+        binding.mainRecycler.visibility = View.GONE
+    }
+
+    private fun resetToPopular() {
+        isSearchMode = false
+        currentSearchQuery = ""
+        loadFirstPage()
+    }
+
+    private fun loadFirstPage() {
+        currentPage = 1
+        allFilms.clear()
+        isLoading = true
+        binding.mainRecycler.visibility = View.GONE
+
+        if (isSearchMode && currentSearchQuery.isNotEmpty()) {
+            // Режим поиска
+            Log.d("HomeFragment", "🔍 Начинаем поиск: '$currentSearchQuery'")
+            interactor.searchFilms(currentSearchQuery, currentPage, object : Interactor.ApiCallback {
+                override fun onSuccess(films: List<Film>, currentPage: Int, totalPages: Int) {
+                    handleSuccess(films, currentPage, totalPages)
+                }
+
+                override fun onFailure(errorMessage: String?) {
+                    handleFailure(errorMessage)
+                }
+            })
+        } else {
+            // Режим популярных фильмов
+            Log.d("HomeFragment", "🎬 Загружаем популярные фильмы")
+            interactor.getFilmsFromApi(currentPage, object : Interactor.ApiCallback {
+                override fun onSuccess(films: List<Film>, currentPage: Int, totalPages: Int) {
+                    handleSuccess(films, currentPage, totalPages)
+                }
+
+                override fun onFailure(errorMessage: String?) {
+                    handleFailure(errorMessage)
+                }
+            })
+        }
+    }
+
+    private fun handleSuccess(films: List<Film>, currentPage: Int, totalPages: Int) {
+        isLoading = false
+        paginationScrollListener.setLoading(false)
+
+        this.currentPage = currentPage
+        this.totalPages = totalPages
+
+        allFilms.addAll(films)
+        filmsAdapter.submitList(allFilms.toList())
+
+        // Сохраняем фильмы в Database для избранного
+        Database.addFilmsFromApi(films)
+
+        // Показываем RecyclerView после загрузки
+        binding.mainRecycler.visibility = View.VISIBLE
+
+        val mode = if (isSearchMode) "поиска" else "популярных"
+        Log.d("HomeFragment", "Загружена страница $currentPage из $totalPages ($mode), фильмов: ${allFilms.size}")
+    }
+
+    private fun handleFailure(errorMessage: String?) {
+        isLoading = false
+        paginationScrollListener.setLoading(false)
+
+        Log.e("HomeFragment", "Ошибка загрузки: $errorMessage")
+        binding.mainRecycler.visibility = View.VISIBLE
+    }
+
+    private fun loadNextPage() {
+        if (isLoading || currentPage >= totalPages) return
+
+        isLoading = true
+        currentPage++
+        binding.loadingProgress.visibility = View.VISIBLE
+
+        Log.d("HomeFragment", "Загрузка страницы $currentPage...")
+
+        val callback = object : Interactor.ApiCallback {
+            override fun onSuccess(films: List<Film>, currentPage: Int, totalPages: Int) {
+                isLoading = false
+                paginationScrollListener.setLoading(false)
+                binding.loadingProgress.visibility = View.GONE
+
+                this@HomeFragment.currentPage = currentPage
+                this@HomeFragment.totalPages = totalPages
+
+                allFilms.addAll(films)
+                Database.addFilmsFromApi(films)
+                filmsAdapter.submitList(allFilms.toList())
+
+                Log.d("HomeFragment", "Добавлено ${films.size} фильмов. Всего: ${allFilms.size}")
+            }
+
+            override fun onFailure(errorMessage: String?) {
+                isLoading = false
+                paginationScrollListener.setLoading(false)
+                binding.loadingProgress.visibility = View.GONE
+                currentPage-- // Откатываем номер страницы при ошибке
+
+                Log.e("HomeFragment", "Ошибка загрузки страницы $currentPage: $errorMessage")
+            }
+        }
+
+        if (isSearchMode && currentSearchQuery.isNotEmpty()) {
+            interactor.searchFilms(currentSearchQuery, currentPage, callback)
+        } else {
+            interactor.getFilmsFromApi(currentPage, callback)
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
+        binding.mainRecycler.removeOnScrollListener(paginationScrollListener)
         _binding = null
     }
 }

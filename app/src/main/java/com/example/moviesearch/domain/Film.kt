@@ -6,9 +6,14 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class Film(
+    val id: Int,
     val title: String,
-    val poster: String,
-    val description: String, // Описание фильма
-    var rating: Double = 0.0,  // Рейтинг фильма
-    var isInFavorites: Boolean = false // Флаг избранного
-) : Parcelable // Реализация Parcelable для передачи между компонентами
+    val originalTitle: String? = null,
+    val alternativeName: String? = null,
+    val year: Int? = null,
+    val description: String? = null,
+    val rating: Double? = null,
+    val posterUrl: String? = null,
+    val genres: List<String> = emptyList(),
+    var isInFavorites: Boolean = false
+) : Parcelable

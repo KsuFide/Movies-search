@@ -5,7 +5,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.example.moviesearch.data.ApiConstants
+import com.example.moviesearch.data.api.ApiConstants
 import com.example.moviesearch.databinding.FilmItemBinding
 import com.example.moviesearch.domain.Film
 import com.example.moviesearch.utils.FilmDiffCallback
@@ -24,12 +24,12 @@ class FilmListRecyclerAdapter(
 
                 // Загрузка изображения через Glide с URL
                 Glide.with(itemView)
-                    .load("${ApiConstants.IMAGES_URL}w342${film.poster}")
+                    .load(film.posterUrl)
                     .centerCrop()
                     .into(poster)
 
                 // Конвертируем рейтинг (0-10) в проценты (0-100)
-                val ratingProgress = (film.rating * 10).toInt()
+                val ratingProgress = (film.rating?.times(10))?.toInt()
                 ratingDonut.setProgress(ratingProgress, animate = true)
 
                 root.setOnClickListener { clickListener(film) }
