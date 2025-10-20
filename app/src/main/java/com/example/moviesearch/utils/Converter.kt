@@ -1,39 +1,22 @@
 package com.example.moviesearch.utils
 
-import android.util.Log
-import com.example.moviesearch.data.dto.TmdbFilm
+import com.example.moviesearch.data.dto.KinopoiskFilmDto
 import com.example.moviesearch.domain.Film
 
 object Converter {
-    fun convertApiListToDtoList(list: List<TmdbFilm>?): List<Film> {
-        val result = mutableListOf<Film>()
-
-        if (list == null) {
-            Log.w("DEBUG", "⚠️ Получен null список фильмов")
-            return result
-        }
-
-        Log.d("DEBUG", "🔄 Конвертируем ${list.size} фильмов")
-
-        list.forEachIndexed { index, tmdbFilm ->
-            // Проверяем обязательные поля
-            val title = tmdbFilm.title ?: "Без названия"
-            val poster = tmdbFilm.posterPath ?: ""
-            val description = tmdbFilm.overview ?: "Нет описания"
-            val rating = tmdbFilm.voteAverage ?: 0.0
-
-            Log.d("DEBUG", "Фильм $index: '$title', постер: $poster")
-
-            result.add(Film(
-                title = title,
-                poster = poster,
-                description = description,
-                rating = rating,
-                isInFavorites = false
-            ))
-        }
-
-        Log.d("DEBUG", "✅ Конвертировано ${result.size} фильмов")
-        return result
+    fun convertApiListToDtoList(kinopoiskFilms: List<KinopoiskFilmDto>?): List<Film> {
+        return kinopoiskFilms?.map { kinopoiskFilm ->
+            Film(
+                id = kinopoiskFilm.id,
+                title = kinopoiskFilm.name ?: kinopoiskFilm.alternativeName ?: "Неизвестно",
+                originalTitle = kinopoiskFilm.alternativeName,
+                alternativeName = kinopoiskFilm.alternativeName,
+                year = kinopoiskFilm.year,
+                description = kinopoiskFilm.description ?: "Описание отсутствует",
+                rating = kinopoiskFilm.rating?.kp,
+                posterUrl = kinopoiskFilm.poster?.url,
+                genres = kinopoiskFilm.genres?.map { it.name } ?: emptyList()
+            )
+        } ?: emptyList()
     }
 }

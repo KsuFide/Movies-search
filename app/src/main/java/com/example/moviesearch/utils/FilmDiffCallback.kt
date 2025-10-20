@@ -7,14 +7,14 @@ class FilmDiffCallback : DiffUtil.ItemCallback<Film>() {
     // Проверка на одинаковость объектов по уникальному индефикатору
     override fun areItemsTheSame(oldItem: Film, newItem: Film): Boolean {
         // Используем title как уникальный модификатор
-        return oldItem.title == newItem.title && oldItem.poster == newItem.poster
+        return oldItem.title == newItem.title && oldItem.posterUrl == newItem.posterUrl
     }
 
     // Проверка на идентичность содержимого объектов
     override fun areContentsTheSame(oldItem: Film, newItem: Film): Boolean {
         // Сравниваем все значимые поля, включая состояние избранного
         return oldItem.title == newItem.title &&
-                oldItem.poster == newItem.poster &&
+                oldItem.posterUrl == newItem.posterUrl &&
                 oldItem.description == newItem.description &&
                 oldItem.isInFavorites == newItem.isInFavorites
     }

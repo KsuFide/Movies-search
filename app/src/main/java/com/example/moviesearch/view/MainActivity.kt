@@ -11,15 +11,18 @@ import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.Fragment
 import com.example.moviesearch.R
+import com.example.moviesearch.data.MainRepository
 import com.example.moviesearch.databinding.ActivityMainBinding
 import com.example.moviesearch.domain.Film
+import com.example.moviesearch.domain.Interactor
 import com.example.moviesearch.view.fragments.CollectionsFragment
-import com.example.moviesearch.view.DetailsActivity
 import com.example.moviesearch.view.fragments.FavoritesFragment
 import com.example.moviesearch.view.fragments.HomeFragment
 import com.example.moviesearch.view.fragments.WatchLaterFragment
 
 class MainActivity : AppCompatActivity() {
+    private val repo = MainRepository()
+    private val interactor = Interactor(repo)
 
     private lateinit var binding: ActivityMainBinding
     private var lastSelectedItemId: Int = R.id.home

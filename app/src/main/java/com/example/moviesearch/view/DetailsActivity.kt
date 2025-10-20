@@ -6,37 +6,32 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
-import com.example.moviesearch.data.Database
+import com.example.moviesearch.data.api.Database
 import com.example.moviesearch.R
-import com.example.moviesearch.data.ApiConstants
+import com.example.moviesearch.data.MainRepository
 import com.example.moviesearch.databinding.FragmentDetailsBinding
 import com.example.moviesearch.domain.Film
+import com.example.moviesearch.domain.Interactor
 import com.google.android.material.shape.CornerFamily
 import com.google.android.material.shape.ShapeAppearanceModel
 import com.google.android.material.snackbar.Snackbar
 
-
 class DetailsActivity : AppCompatActivity() {
 
-    // Объявляем переменную для binding
+    private val repo = MainRepository()
+    private val interactor = Interactor(repo)
     private lateinit var binding: FragmentDetailsBinding
-    private lateinit var film: Film // Фильм, который просматривается
+    private lateinit var film: Film
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Инициализируем binding
         binding = FragmentDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Получаем объект Film из интента
         film = intent.getParcelableExtra<Film>("film") ?: run {
-            finish() // Закрываем активити, если фильм передан
+            finish()
             return
         }
-
-
-        // Проверяем статус избранного при создании активити
-        film.isInFavorites = Database.isFavorite(film)
 
         // Скругляем иконку fab
         binding.detailsFab.shapeAppearanceModel = ShapeAppearanceModel()
@@ -48,38 +43,36 @@ class DetailsActivity : AppCompatActivity() {
             .setAllCorners(CornerFamily.ROUNDED, 100f)
             .build()
 
-
         // Настройка элементов интерфейса
         with(binding) {
-            // Устанавливаем заголовок
             detailsToolbar.title = film.title
 
             // Загрузка изображения через Glide
             Glide.with(this@DetailsActivity)
-                .load("${ApiConstants.IMAGES_URL}w780${film.poster}")
+                .load(film.posterUrl)
                 .centerCrop()
                 .into(detailsPoster)
 
             // Устанавливаем описание
-            detailsDescription.text = film.description
+            detailsDescription.text = film.description ?: "Описание отсутствует"
 
-
-            // Обновляем вид кнопки согласно текущему состоянию
             updateFavoriteButton()
 
             // Обработчик клика по кнопке избранного
             detailsFabFavorites.setOnClickListener {
-                val wasFavorite = Database.isFavorite(film)
-                Database.toggleFavorite(film)
+                val wasFavorite = Database.isFavorite(film.id)
+                Database.toggleFavorite(film.id)
+
                 // Обновляем вид кнопки
                 updateFavoriteButton()
+
                 // Показываем уведомление о действии
                 showSnackbar(
-                    if (Database.isFavorite(film)) "Добавлено в избранное" else "Удалено из избранного",
-                    "Отменить", // Текст кнопки отмены
+                    if (Database.isFavorite(film.id)) "Добавлено в избранное" else "Удалено из избранного",
+                    "Отменить",
                     {
-                        //Действие при отмене - возвращаем предыдущее состояние
-                        Database.toggleFavorite(film)
+                        // Действие при отмене - возвращаем предыдущее состояние
+                        Database.toggleFavorite(film.id)
                         updateFavoriteButton()
                     }
                 )
@@ -87,26 +80,23 @@ class DetailsActivity : AppCompatActivity() {
 
             // Обработчик клика по кнопке поделиться
             detailsFab.setOnClickListener {
-                // Создаём интент для отправки данных
                 val intent = Intent().apply {
-                    action = Intent.ACTION_SEND // Указываем тип действие
-                    // Добавляем текст с информацией о фильме
+                    action = Intent.ACTION_SEND
                     putExtra(
                         Intent.EXTRA_TEXT,
                         "Посмотрите этот фильм: ${film.title}\n\n${film.description}"
                     )
-                    type = "text/plain" // Указываем тип данных
+                    type = "text/plain"
                 }
-                // Запускаем диалог выбора приложения для отправки
                 startActivity(Intent.createChooser(intent, "Поделиться через:"))
             }
         }
     }
 
-
     // Метод для обновления вида кнопки избранного
     private fun updateFavoriteButton() {
-        val isFavorite = Database.isFavorite(film)
+        // ИСПРАВЛЕНО: работаем с film.id
+        val isFavorite = Database.isFavorite(film.id)
         binding.detailsFabFavorites.setImageResource(
             R.drawable.baseline_favorite_24
         )
@@ -118,20 +108,16 @@ class DetailsActivity : AppCompatActivity() {
         )
     }
 
-
-
     // Показать всплывающее уведомление (Snackbar)
     private fun showSnackbar(
         message: String,
         actionText: String?,
-        undoAction: () -> Unit = {} // Функция для отмены действия
+        undoAction: () -> Unit = {}
     ) {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).apply {
             actionText?.let { text ->
-                // Добавляем кнопку отмены если нужно
                 setAction(text) { undoAction() }
             }
-            // Привязываем Snackbar к FAB для правильного позиционирования
             setAnchorView(binding.detailsFab)
         }.show()
     }

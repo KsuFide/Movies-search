@@ -185,15 +185,15 @@ class RatingDonutView @JvmOverloads constructor(
         )
     }
 
-    fun setProgress(pr: Int, animate: Boolean = true) {
+    fun setProgress(pr: Int?, animate: Boolean = true) {
         // Останавливаем предыдущую анимацию
         progressAnimator?.cancel()
 
         // Сохраняем новое целевое значение
-        progress = pr.coerceIn(0, 100)
+        progress = (pr?.coerceIn(0, 100) ?:
 
         // Обновляем цвета красок
-        updatePaintColors()
+        updatePaintColors()) as Int
 
         if (animate) {
             // Запускаем анимацию

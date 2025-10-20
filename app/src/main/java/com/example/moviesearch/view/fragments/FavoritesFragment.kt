@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.moviesearch.data.Database
+import com.example.moviesearch.data.api.Database
 import com.example.moviesearch.view.adapters.FilmListRecyclerAdapter
 import com.example.moviesearch.view.MainActivity
 import com.example.moviesearch.view.adapters.TopSpacingItemDecoration
