@@ -1,15 +1,23 @@
 package com.example.moviesearch.domain
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import com.example.moviesearch.data.MainRepository
-import com.example.moviesearch.data.network.RetrofitClient
+import com.example.moviesearch.data.api.KinopoiskApi
 import com.example.moviesearch.data.dto.KinopoiskResponse
+import com.example.moviesearch.data.network.RetrofitClient
 import com.example.moviesearch.utils.Converter
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import javax.inject.Inject
 
-class Interactor(private val repo: MainRepository) {
+class Interactor @Inject constructor(
+    private val repo: MainRepository,
+    private val kinopoiskApi: KinopoiskApi,
+    private val apiKey: String
+) {
 
     interface ApiCallback {
         fun onSuccess(films: List<Film>, currentPage: Int, totalPages: Int)
@@ -20,15 +28,14 @@ class Interactor(private val repo: MainRepository) {
     fun getFilmsFromApi(page: Int, callback: ApiCallback) {
         Log.d("Interactor", "🔄 Запрос популярных фильмов, страница $page...")
 
-        RetrofitClient.kinopoiskApi.getPopularFilms(
-            apiKey = RetrofitClient.getApiKey(),
+        kinopoiskApi.getPopularFilms(
+            apiKey = apiKey,
             page = page
         ).enqueue(object : Callback<KinopoiskResponse> {
             override fun onResponse(
                 call: Call<KinopoiskResponse>,
                 response: Response<KinopoiskResponse>
             ) {
-                Log.d("Interactor", "📡 Ответ от Кинопоиска для страницы $page")
 
                 if (response.isSuccessful) {
                     val body = response.body()
@@ -37,7 +44,6 @@ class Interactor(private val repo: MainRepository) {
                     val films = Converter.convertApiListToDtoList(body?.docs)
                     Log.d("Interactor", "🔄 После конвертации: ${films.size} фильмов")
 
-                    // Отладка первых фильмов
                     films.take(2).forEachIndexed { index, film ->
                         Log.d("Interactor", "   🎬 ${index + 1}. '${film.title}' (${film.year}) - рейтинг: ${film.rating}")
                     }
@@ -76,6 +82,7 @@ class Interactor(private val repo: MainRepository) {
             enName = normalizedQuery,         // Английское название
             page = page
         ).enqueue(object : Callback<KinopoiskResponse> {
+            @RequiresApi(Build.VERSION_CODES.O)
             override fun onResponse(
                 call: Call<KinopoiskResponse>,
                 response: Response<KinopoiskResponse>
