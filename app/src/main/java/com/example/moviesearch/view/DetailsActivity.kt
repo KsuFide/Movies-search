@@ -8,18 +8,16 @@ import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
 import com.example.moviesearch.data.api.Database
 import com.example.moviesearch.R
-import com.example.moviesearch.data.MainRepository
 import com.example.moviesearch.databinding.FragmentDetailsBinding
 import com.example.moviesearch.domain.Film
-import com.example.moviesearch.domain.Interactor
 import com.google.android.material.shape.CornerFamily
 import com.google.android.material.shape.ShapeAppearanceModel
 import com.google.android.material.snackbar.Snackbar
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class DetailsActivity : AppCompatActivity() {
 
-    private val repo = MainRepository()
-    private val interactor = Interactor(repo)
     private lateinit var binding: FragmentDetailsBinding
     private lateinit var film: Film
 

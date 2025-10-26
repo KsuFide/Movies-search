@@ -8,30 +8,36 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.moviesearch.data.MainRepository
 import com.example.moviesearch.data.api.Database
-import com.example.moviesearch.view.adapters.FilmListRecyclerAdapter
-import com.example.moviesearch.view.MainActivity
-import com.example.moviesearch.view.adapters.TopSpacingItemDecoration
 import com.example.moviesearch.databinding.FragmentHomeBinding
 import com.example.moviesearch.domain.Film
 import com.example.moviesearch.domain.Interactor
 import com.example.moviesearch.utils.AnimationHelper
 import com.example.moviesearch.utils.PaginationScrollListener
+import com.example.moviesearch.view.MainActivity
+import com.example.moviesearch.view.adapters.FilmListRecyclerAdapter
+import com.example.moviesearch.view.adapters.TopSpacingItemDecoration
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
+
+    @Inject
+    lateinit var interactor: Interactor
+
     private lateinit var filmsAdapter: FilmListRecyclerAdapter
-    private val interactor = Interactor(MainRepository())
+    private lateinit var paginationScrollListener: PaginationScrollListener
 
     // Переменные для пагинации и поиска
     private var currentPage = 1
     private var totalPages = 1
     private var isLoading = false
     private val allFilms = mutableListOf<Film>()
-    private lateinit var paginationScrollListener: PaginationScrollListener
+
 
     // Переменные для поиска
     private var isSearchMode = false

@@ -19,21 +19,18 @@ import com.example.moviesearch.view.fragments.CollectionsFragment
 import com.example.moviesearch.view.fragments.FavoritesFragment
 import com.example.moviesearch.view.fragments.HomeFragment
 import com.example.moviesearch.view.fragments.WatchLaterFragment
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-    private val repo = MainRepository()
-    private val interactor = Interactor(repo)
 
     private lateinit var binding: ActivityMainBinding
     private var lastSelectedItemId: Int = R.id.home
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
         val splashScreen = installSplashScreen()
-
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
-
         setContentView(binding.root)
 
         // Установка стартового фрагмента
