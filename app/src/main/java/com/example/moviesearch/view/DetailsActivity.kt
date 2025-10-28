@@ -6,22 +6,29 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
-import com.example.moviesearch.data.api.Database
 import com.example.moviesearch.R
+import com.example.moviesearch.data.api.Database
 import com.example.moviesearch.databinding.FragmentDetailsBinding
 import com.example.moviesearch.domain.Film
+import com.example.moviesearch.domain.IInteractor
 import com.google.android.material.shape.CornerFamily
 import com.google.android.material.shape.ShapeAppearanceModel
 import com.google.android.material.snackbar.Snackbar
-import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
-@AndroidEntryPoint
+
 class DetailsActivity : AppCompatActivity() {
+
+    @Inject
+    lateinit var interactor: IInteractor
 
     private lateinit var binding: FragmentDetailsBinding
     private lateinit var film: Film
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        (application as com.example.moviesearch.App).appComponent.inject(this)
+
         super.onCreate(savedInstanceState)
         binding = FragmentDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)

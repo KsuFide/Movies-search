@@ -1,7 +1,6 @@
 package com.example.moviesearch.domain
 
 import android.os.Parcelable
-import androidx.annotation.DrawableRes
 import kotlinx.parcelize.Parcelize
 
 @Parcelize

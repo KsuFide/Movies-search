@@ -2,7 +2,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("kotlin-kapt")
-    id("com.google.dagger.hilt.android")
     id("kotlin-parcelize")
 }
 
@@ -82,14 +81,14 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
 
-    // Hilt
-    implementation("com.google.dagger:hilt-android:2.48")
-    kapt("com.google.dagger:hilt-compiler:2.48")
+    // Dagger
+    implementation("com.google.dagger:dagger:2.48")
+    kapt("com.google.dagger:dagger-compiler:2.48")
 
     // Splashscreen
     implementation("androidx.core:core-splashscreen:1.0.1")
 
-    // Material Design (только одна версия!)
+    // Material Design
     implementation("com.google.android.material:material:1.9.0")
 
     // Тестирование
