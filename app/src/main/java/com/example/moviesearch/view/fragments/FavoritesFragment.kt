@@ -11,9 +11,14 @@ import com.example.moviesearch.view.adapters.FilmListRecyclerAdapter
 import com.example.moviesearch.view.MainActivity
 import com.example.moviesearch.view.adapters.TopSpacingItemDecoration
 import com.example.moviesearch.databinding.FragmentFavoritesBinding
+import com.example.moviesearch.domain.IInteractor
 import com.example.moviesearch.utils.AnimationHelper
+import javax.inject.Inject
 
 class FavoritesFragment : Fragment() {
+
+    @Inject
+    lateinit var interactor: IInteractor
 
     private var _binding: FragmentFavoritesBinding? = null
     private val binding get() = _binding!!

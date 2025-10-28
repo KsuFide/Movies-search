@@ -5,7 +5,6 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.example.moviesearch.data.api.ApiConstants
 import com.example.moviesearch.databinding.FilmItemBinding
 import com.example.moviesearch.domain.Film
 import com.example.moviesearch.utils.FilmDiffCallback

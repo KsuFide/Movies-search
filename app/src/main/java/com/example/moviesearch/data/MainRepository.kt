@@ -1,16 +1,16 @@
 package com.example.moviesearch.data
 
 import com.example.moviesearch.domain.Film
+import com.example.moviesearch.domain.IMainRepository
+import javax.inject.Inject
 
-class MainRepository {
-    // Делаем изменяемым списком и добавляем метод обновления
-    var filmsDataBase = mutableListOf<Film>()
-        private set
+class MainRepository @Inject constructor() : IMainRepository {
+    private var filmsDataBase = mutableListOf<Film>()
 
-    fun updateFilms(newFilms: List<Film>) {
+    override fun updateFilms(newFilms: List<Film>) {
         filmsDataBase.clear()
         filmsDataBase.addAll(newFilms)
     }
 
-    fun getFilms(): List<Film> = filmsDataBase.toList()
+    override fun getFilms(): List<Film> = filmsDataBase.toList()
 }

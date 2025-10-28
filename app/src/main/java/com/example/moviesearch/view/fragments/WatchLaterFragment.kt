@@ -10,10 +10,16 @@ import com.example.moviesearch.view.adapters.FilmListRecyclerAdapter
 import com.example.moviesearch.view.MainActivity
 import com.example.moviesearch.view.adapters.TopSpacingItemDecoration
 import com.example.moviesearch.databinding.FragmentWatchLaterBinding
+import com.example.moviesearch.domain.IInteractor
 import com.example.moviesearch.utils.AnimationHelper
+import javax.inject.Inject
 
 
 class WatchLaterFragment : Fragment() {
+
+    @Inject
+    lateinit var interactor: IInteractor
+
     private var _binding: FragmentWatchLaterBinding? = null
     private val binding get() = _binding!!
     private lateinit var filmsAdapter: FilmListRecyclerAdapter

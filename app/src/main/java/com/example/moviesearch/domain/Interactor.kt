@@ -17,7 +17,7 @@ class Interactor @Inject constructor(
     private val repo: MainRepository,
     private val kinopoiskApi: KinopoiskApi,
     private val apiKey: String
-) {
+) : IInteractor {
 
     interface ApiCallback {
         fun onSuccess(films: List<Film>, currentPage: Int, totalPages: Int)
@@ -25,7 +25,7 @@ class Interactor @Inject constructor(
     }
 
     // Метод для получения популярных фильмов
-    fun getFilmsFromApi(page: Int, callback: ApiCallback) {
+    override fun getFilmsFromApi(page: Int, callback: ApiCallback) {
         Log.d("Interactor", "🔄 Запрос популярных фильмов, страница $page...")
 
         kinopoiskApi.getPopularFilms(
@@ -62,7 +62,7 @@ class Interactor @Inject constructor(
     }
 
     // УЛУЧШЕННЫЙ метод для поиска фильмов с детальной отладкой
-    fun searchFilms(query: String, page: Int, callback: ApiCallback) {
+    override fun searchFilms(query: String, page: Int, callback: ApiCallback) {
         val normalizedQuery = query.trim()
 
         // Валидация запроса
@@ -188,7 +188,7 @@ class Interactor @Inject constructor(
     }
 
     // Дополнительный метод для быстрого поиска (без пагинации)
-    fun quickSearch(query: String, callback: (List<Film>) -> Unit) {
+   override fun quickSearch(query: String, callback: (List<Film>) -> Unit) {
         val normalizedQuery = query.trim()
 
         if (normalizedQuery.length < 2) {
@@ -206,6 +206,7 @@ class Interactor @Inject constructor(
             page = 1,
             limit = 10 // Ограничиваем для быстрого ответа
         ).enqueue(object : Callback<KinopoiskResponse> {
+            @RequiresApi(Build.VERSION_CODES.O)
             override fun onResponse(
                 call: Call<KinopoiskResponse>,
                 response: Response<KinopoiskResponse>

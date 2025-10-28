@@ -11,23 +11,22 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.moviesearch.data.api.Database
 import com.example.moviesearch.databinding.FragmentHomeBinding
 import com.example.moviesearch.domain.Film
+import com.example.moviesearch.domain.IInteractor
 import com.example.moviesearch.domain.Interactor
 import com.example.moviesearch.utils.AnimationHelper
 import com.example.moviesearch.utils.PaginationScrollListener
 import com.example.moviesearch.view.MainActivity
 import com.example.moviesearch.view.adapters.FilmListRecyclerAdapter
 import com.example.moviesearch.view.adapters.TopSpacingItemDecoration
-import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
-@AndroidEntryPoint
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
     @Inject
-    lateinit var interactor: Interactor
+    lateinit var interactor: IInteractor
 
     private lateinit var filmsAdapter: FilmListRecyclerAdapter
     private lateinit var paginationScrollListener: PaginationScrollListener
@@ -53,6 +52,8 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        (requireActivity().application as com.example.moviesearch.App).appComponent.inject(this)
 
         AnimationHelper.performFragmentCircularRevealAnimation(binding.homeFragmentRoot, requireActivity(), 1)
         binding.homeFragmentRoot.visibility = View.VISIBLE
@@ -85,13 +86,13 @@ class HomeFragment : Fragment() {
 
     private fun setupSearchView() {
         binding.searchView.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
+            private var currentQuery: String? = null
+
             override fun onQueryTextSubmit(query: String?): Boolean {
-                // Выполняем поиск при нажатии Enter
                 query?.let {
                     if (it.length >= 2) {
                         performSearch(it)
                     } else {
-                        // Показываем подсказку о минимальной длине
                         Toast.makeText(requireContext(), "Введите минимум 2 символа", Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -99,24 +100,22 @@ class HomeFragment : Fragment() {
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                // Добавляем задержку для избежания частых запросов
+                // Убираем лишние запросы - обрабатываем только реальные изменения
+                if (newText == currentQuery) return false
+
+                currentQuery = newText
+
                 newText?.let {
                     when {
                         it.length >= 3 -> {
-                            // Используем задержку для дебаунса
-                            binding.searchView.postDelayed({
-                                if (binding.searchView.query?.toString() == it) {
-                                    performSearch(it)
-                                }
-                            }, 500) // Задержка 500ms
+                            // Убираем задержку для более отзывчивого поиска
+                            if (binding.searchView.query?.toString() == it) {
+                                performSearch(it)
+                            }
                         }
-                        it.isEmpty() -> {
-                            // Если строка поиска очищена, возвращаемся к популярным
+                        it.isEmpty() && isSearchMode -> {
+                            // Только если был режим поиска и очистили
                             resetToPopular()
-                        }
-                        else -> {
-                            // Для строк длиной 1-2 символа ничего не делаем
-                            // Это заменяет отсутствующую ветку else в if-else
                         }
                     }
                 }
