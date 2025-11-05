@@ -18,6 +18,7 @@ import com.example.moviesearch.domain.Interactor
 import com.example.moviesearch.view.fragments.CollectionsFragment
 import com.example.moviesearch.view.fragments.FavoritesFragment
 import com.example.moviesearch.view.fragments.HomeFragment
+import com.example.moviesearch.view.fragments.SettingsFragment
 import com.example.moviesearch.view.fragments.WatchLaterFragment
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -61,7 +62,7 @@ class MainActivity : AppCompatActivity() {
             // Анимация иконки
             animateIcon(item)
 
-            // Определение анимации перехода (как в старом коде)
+            // Определение анимации перехода
             val (enterAnim, exitAnim) = when {
                 // Home -> Favorites: вход справа, выход влево
                 item.itemId == R.id.favorites && lastSelectedItemId == R.id.home ->
@@ -119,6 +120,13 @@ class MainActivity : AppCompatActivity() {
                 R.id.selections -> {
                     val tag = "selections"
                     val fragment = checkFragmentExistence(tag) ?: CollectionsFragment()
+                    changeFragment(fragment, tag, enterAnim, exitAnim)
+                    true
+                }
+
+                R.id.settings -> {
+                    val tag = "settings"
+                    val fragment = checkFragmentExistence(tag) ?: SettingsFragment()
                     changeFragment(fragment, tag, enterAnim, exitAnim)
                     true
                 }

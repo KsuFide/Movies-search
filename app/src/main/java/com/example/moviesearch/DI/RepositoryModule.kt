@@ -1,11 +1,14 @@
 package com.example.moviesearch.DI
 
+import android.content.Context
 import com.example.moviesearch.data.MainRepository
 import com.example.moviesearch.data.api.KinopoiskApi
+import com.example.moviesearch.data.preferences.PreferenceProvider
 import com.example.moviesearch.domain.Interactor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -24,8 +27,20 @@ object RepositoryModule {
     fun provideInteractor(
         repository: MainRepository,
         kinopoiskApi: KinopoiskApi,
-        apiKey: String
+        apiKey: String,
+        preferences: PreferenceProvider
     ): Interactor {
-        return Interactor(repository, kinopoiskApi, apiKey)
+        return Interactor(repository, kinopoiskApi, apiKey, preferences)
+    }
+}
+
+@Module
+@InstallIn(SingletonComponent::class)
+object PreferencesModule {
+
+    @Provides
+    @Singleton
+    fun providePreferenceProvider(@ApplicationContext context: Context): PreferenceProvider {
+        return PreferenceProvider(context)
     }
 }

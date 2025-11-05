@@ -11,6 +11,11 @@
     <string name="watch_later_action">Посмотреть позже</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="menu_settings_title_text">Настройки</string>
+    <string name="radio_button_popular">Популярные</string>
+    <string name="radio_button_top_rated">Высокий рейтинг</string>
+    <string name="radio_button_recent">Новинки</string>
+    <string name="radio_group_header">Подборка на главном экране:</string>
 
 
 </resources>

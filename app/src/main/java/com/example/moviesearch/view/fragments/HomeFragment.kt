@@ -38,10 +38,12 @@ class HomeFragment : Fragment() {
     private var isLoading = false
     private val allFilms = mutableListOf<Film>()
 
-
     // Переменные для поиска
     private var isSearchMode = false
     private var currentSearchQuery = ""
+
+    // Добавляем отслеживание текущей категории
+    private var currentCategory = ""
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -54,8 +56,14 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        testPreferences()
+
         AnimationHelper.performFragmentCircularRevealAnimation(binding.homeFragmentRoot, requireActivity(), 1)
         binding.homeFragmentRoot.visibility = View.VISIBLE
+
+        // Получаем текущую категорию при создании
+        currentCategory = interactor.getDefaultCategoryFromPreferences()
+        Log.d("HomeFragment", "🎯 Текущая категория: $currentCategory")
 
         // Инициализация адаптера
         filmsAdapter = FilmListRecyclerAdapter { film ->
@@ -79,19 +87,46 @@ class HomeFragment : Fragment() {
         // Настройка SearchView
         setupSearchView()
 
+        // Настройка Swipe to Refresh
+        setupSwipeRefresh()
+
         // Загрузка первой страницы
         loadFirstPage()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.d("HomeFragment", "🔄 onResume вызван")
+        checkCategoryChange()
+    }
+
+    private fun checkCategoryChange() {
+        val newCategory = interactor.getDefaultCategoryFromPreferences()
+        Log.d("HomeFragment", "🔍 Проверка категории: текущая=$currentCategory, новая=$newCategory")
+
+        if (newCategory != currentCategory && !isSearchMode) {
+            Log.d("HomeFragment", "🔄 Категория изменилась! Перезагружаем данные")
+            currentCategory = newCategory
+            loadFirstPage()
+        } else {
+            Log.d("HomeFragment", "ℹ️ Категория не изменилась или режим поиска")
+        }
+    }
+
+    private fun setupSwipeRefresh() {
+        binding.swipeRefreshLayout.setOnRefreshListener {
+            // Обновляем данные
+            loadFirstPage()
+        }
     }
 
     private fun setupSearchView() {
         binding.searchView.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                // Выполняем поиск при нажатии Enter
                 query?.let {
                     if (it.length >= 2) {
                         performSearch(it)
                     } else {
-                        // Показываем подсказку о минимальной длине
                         Toast.makeText(requireContext(), "Введите минимум 2 символа", Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -99,24 +134,20 @@ class HomeFragment : Fragment() {
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                // Добавляем задержку для избежания частых запросов
                 newText?.let {
                     when {
                         it.length >= 3 -> {
-                            // Используем задержку для дебаунса
                             binding.searchView.postDelayed({
                                 if (binding.searchView.query?.toString() == it) {
                                     performSearch(it)
                                 }
-                            }, 500) // Задержка 500ms
+                            }, 500)
                         }
                         it.isEmpty() -> {
-                            // Если строка поиска очищена, возвращаемся к популярным
                             resetToPopular()
                         }
                         else -> {
                             // Для строк длиной 1-2 символа ничего не делаем
-                            // Это заменяет отсутствующую ветку else в if-else
                         }
                     }
                 }
@@ -126,7 +157,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun performSearch(query: String) {
-        if (query == currentSearchQuery) return // Не ищем тот же запрос повторно
+        if (query == currentSearchQuery) return
 
         currentSearchQuery = query
         isSearchMode = true
@@ -139,6 +170,8 @@ class HomeFragment : Fragment() {
     private fun resetToPopular() {
         isSearchMode = false
         currentSearchQuery = ""
+        // При сбросе поиска обновляем текущую категорию
+        currentCategory = interactor.getDefaultCategoryFromPreferences()
         loadFirstPage()
     }
 
@@ -147,9 +180,9 @@ class HomeFragment : Fragment() {
         allFilms.clear()
         isLoading = true
         binding.mainRecycler.visibility = View.GONE
+        binding.swipeRefreshLayout.isRefreshing = true
 
         if (isSearchMode && currentSearchQuery.isNotEmpty()) {
-            // Режим поиска
             Log.d("HomeFragment", "🔍 Начинаем поиск: '$currentSearchQuery'")
             interactor.searchFilms(currentSearchQuery, currentPage, object : Interactor.ApiCallback {
                 override fun onSuccess(films: List<Film>, currentPage: Int, totalPages: Int) {
@@ -161,8 +194,8 @@ class HomeFragment : Fragment() {
                 }
             })
         } else {
-            // Режим популярных фильмов
-            Log.d("HomeFragment", "🎬 Загружаем популярные фильмы")
+            val category = interactor.getDefaultCategoryFromPreferences()
+            Log.d("HomeFragment", "🎬 Загружаем фильмы категории: $category")
             interactor.getFilmsFromApi(currentPage, object : Interactor.ApiCallback {
                 override fun onSuccess(films: List<Film>, currentPage: Int, totalPages: Int) {
                     handleSuccess(films, currentPage, totalPages)
@@ -178,10 +211,15 @@ class HomeFragment : Fragment() {
     private fun handleSuccess(films: List<Film>, currentPage: Int, totalPages: Int) {
         isLoading = false
         paginationScrollListener.setLoading(false)
+        binding.swipeRefreshLayout.isRefreshing = false
 
         this.currentPage = currentPage
         this.totalPages = totalPages
 
+        // Очищаем список только при загрузке первой страницы
+        if (currentPage == 1) {
+            allFilms.clear()
+        }
         allFilms.addAll(films)
         filmsAdapter.submitList(allFilms.toList())
 
@@ -191,16 +229,18 @@ class HomeFragment : Fragment() {
         // Показываем RecyclerView после загрузки
         binding.mainRecycler.visibility = View.VISIBLE
 
-        val mode = if (isSearchMode) "поиска" else "популярных"
+        val mode = if (isSearchMode) "поиска" else "категории ${interactor.getDefaultCategoryFromPreferences()}"
         Log.d("HomeFragment", "Загружена страница $currentPage из $totalPages ($mode), фильмов: ${allFilms.size}")
     }
 
     private fun handleFailure(errorMessage: String?) {
         isLoading = false
         paginationScrollListener.setLoading(false)
+        binding.swipeRefreshLayout.isRefreshing = false
 
         Log.e("HomeFragment", "Ошибка загрузки: $errorMessage")
         binding.mainRecycler.visibility = View.VISIBLE
+        Toast.makeText(requireContext(), "Ошибка загрузки: $errorMessage", Toast.LENGTH_SHORT).show()
     }
 
     private fun loadNextPage() {
@@ -235,6 +275,7 @@ class HomeFragment : Fragment() {
                 currentPage-- // Откатываем номер страницы при ошибке
 
                 Log.e("HomeFragment", "Ошибка загрузки страницы $currentPage: $errorMessage")
+                Toast.makeText(requireContext(), "Ошибка загрузки: $errorMessage", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -243,6 +284,19 @@ class HomeFragment : Fragment() {
         } else {
             interactor.getFilmsFromApi(currentPage, callback)
         }
+    }
+
+    private fun testPreferences() {
+        val testCategory = interactor.getDefaultCategoryFromPreferences()
+        Log.d("HomeFragment", "🧪 Тест настроек: текущая категория = $testCategory")
+
+        // Протестируем сохранение/чтение
+        interactor.saveDefaultCategoryToPreferences("test_category")
+        val savedCategory = interactor.getDefaultCategoryFromPreferences()
+        Log.d("HomeFragment", "🧪 Тест сохранения: сохраненная категория = $savedCategory")
+
+        // Вернем обратно
+        interactor.saveDefaultCategoryToPreferences(testCategory)
     }
 
     override fun onDestroyView() {

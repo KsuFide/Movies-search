@@ -7,6 +7,7 @@ import com.example.moviesearch.data.MainRepository
 import com.example.moviesearch.data.api.KinopoiskApi
 import com.example.moviesearch.data.dto.KinopoiskResponse
 import com.example.moviesearch.data.network.RetrofitClient
+import com.example.moviesearch.data.preferences.PreferenceProvider
 import com.example.moviesearch.utils.Converter
 import retrofit2.Call
 import retrofit2.Callback
@@ -16,38 +17,38 @@ import javax.inject.Inject
 class Interactor @Inject constructor(
     private val repo: MainRepository,
     private val kinopoiskApi: KinopoiskApi,
-    private val apiKey: String
+    private val apiKey: String,
+    private val preferences: PreferenceProvider
 ) {
+
+    fun saveDefaultCategoryToPreferences(category: String) {
+        preferences.saveDefaultCategory(category)
+    }
+
+    fun getDefaultCategoryFromPreferences() = preferences.getDefaultCategory()
 
     interface ApiCallback {
         fun onSuccess(films: List<Film>, currentPage: Int, totalPages: Int)
         fun onFailure(errorMessage: String?)
     }
 
-    // Метод для получения популярных фильмов
+    @RequiresApi(Build.VERSION_CODES.O)
     fun getFilmsFromApi(page: Int, callback: ApiCallback) {
-        Log.d("Interactor", "🔄 Запрос популярных фильмов, страница $page...")
+        val category = getDefaultCategoryFromPreferences()
 
-        kinopoiskApi.getPopularFilms(
-            apiKey = apiKey,
-            page = page
-        ).enqueue(object : Callback<KinopoiskResponse> {
-            override fun onResponse(
-                call: Call<KinopoiskResponse>,
-                response: Response<KinopoiskResponse>
-            ) {
+        val call = when (category) {
+            "popular" -> getPopularFilmsCall(page)
+            "top_rated" -> getTopRatedFilmsCall(page)
+            "recent" -> getRecentFilmsCall(page)
+            "action" -> getActionFilmsCall(page) // Новая категория
+            else -> getPopularFilmsCall(page)
+        }
 
+        call.enqueue(object : Callback<KinopoiskResponse> {
+            override fun onResponse(call: Call<KinopoiskResponse>, response: Response<KinopoiskResponse>) {
                 if (response.isSuccessful) {
                     val body = response.body()
-                    Log.d("Interactor", "✅ Фильмов в ответе: ${body?.docs?.size ?: 0}")
-
                     val films = Converter.convertApiListToDtoList(body?.docs)
-                    Log.d("Interactor", "🔄 После конвертации: ${films.size} фильмов")
-
-                    films.take(2).forEachIndexed { index, film ->
-                        Log.d("Interactor", "   🎬 ${index + 1}. '${film.title}' (${film.year}) - рейтинг: ${film.rating}")
-                    }
-
                     callback.onSuccess(films, body?.page ?: page, body?.pages ?: 1)
                 } else {
                     handleApiError(response, callback)
@@ -55,95 +56,41 @@ class Interactor @Inject constructor(
             }
 
             override fun onFailure(call: Call<KinopoiskResponse>, t: Throwable) {
-                Log.e("Interactor", "❌ Сетевая ошибка: ${t.message}")
+                Log.e("Interactor", "Сетевая ошибка: ${t.message}")
                 callback.onFailure("Сетевая ошибка: ${t.message}")
             }
         })
     }
 
-    // УЛУЧШЕННЫЙ метод для поиска фильмов с детальной отладкой
     fun searchFilms(query: String, page: Int, callback: ApiCallback) {
         val normalizedQuery = query.trim()
 
-        // Валидация запроса
         if (normalizedQuery.length < 2) {
-            Log.w("Interactor", "⚠️ Слишком короткий запрос: '$normalizedQuery'")
             callback.onSuccess(emptyList(), page, 1)
             return
         }
 
-        Log.d("Interactor", "🔍 Умный поиск: '$normalizedQuery', страница $page")
-
-        // Используем все возможные поля для поиска
+        // Улучшенный поиск только фильмов с жанрами
         RetrofitClient.kinopoiskApi.searchFilmsOptimized(
             apiKey = RetrofitClient.getApiKey(),
-            name = normalizedQuery,           // Русское название
-            alternativeName = normalizedQuery, // Оригинальное название
-            enName = normalizedQuery,         // Английское название
-            page = page
+            name = normalizedQuery,
+            alternativeName = normalizedQuery,
+            enName = normalizedQuery,
+            page = page,
+            type = "movie" // Гарантируем поиск только фильмов
         ).enqueue(object : Callback<KinopoiskResponse> {
             @RequiresApi(Build.VERSION_CODES.O)
             override fun onResponse(
                 call: Call<KinopoiskResponse>,
                 response: Response<KinopoiskResponse>
             ) {
-                Log.d("Interactor", "📡 Ответ поиска от Кинопоиска")
-
                 if (response.isSuccessful) {
                     val body = response.body()
                     val rawFilms = body?.docs ?: emptyList()
-                    Log.d("Interactor", "📊 API вернул ${rawFilms.size} фильмов для запроса '$normalizedQuery'")
 
-                    // Конвертируем DTO в доменные объекты
+                    // Фильтруем только фильмы (исключаем сериалы, аниме и т.д.)
                     val films = Converter.convertApiListToDtoList(rawFilms)
-                    Log.d("Interactor", "🔄 После конвертации: ${films.size} фильмов")
-
-                    // ДЕТАЛЬНАЯ ОТЛАДКА: смотрим что пришло от API
-                    if (films.isEmpty()) {
-                        Log.w("Interactor", "⚠️ API не вернул фильмов для запроса '$normalizedQuery'")
-                    } else {
-                        Log.d("Interactor", "🎯 АНАЛИЗ ПЕРВЫХ ФИЛЬМОВ ОТ API:")
-                        films.take(5).forEachIndexed { index, film ->
-                            Log.d("Interactor", "   ${index + 1}. '${film.title}'")
-                            Log.d("Interactor", "      - originalTitle: '${film.originalTitle ?: "null"}'")
-                            Log.d("Interactor", "      - alternativeName: '${film.alternativeName ?: "null"}'")
-                            Log.d("Interactor", "      - год: ${film.year}, рейтинг: ${film.rating}")
-
-                            // Проверяем совпадения вручную
-                            val titleMatch = film.title?.lowercase()?.contains(normalizedQuery.lowercase()) == true
-                            val originalMatch = film.originalTitle?.lowercase()?.contains(normalizedQuery.lowercase()) == true
-                            val alternativeMatch = film.alternativeName?.lowercase()?.contains(normalizedQuery.lowercase()) == true
-
-                            Log.d("Interactor", "      - совпадения: title=$titleMatch, original=$originalMatch, alternative=$alternativeMatch")
-                        }
-                    }
-
-                    // ПРИМЕНЯЕМ УМНЫЙ ПОИСК
-                    Log.d("Interactor", "🔍 Запускаем умный поиск...")
                     val relevantFilms = SearchEngine.smartFilmSearch(films, normalizedQuery)
-
-                    Log.d("Interactor", "✅ После умного поиска: ${relevantFilms.size} релевантных фильмов")
-
-                    // Логируем результаты умного поиска
-                    if (relevantFilms.isNotEmpty()) {
-                        Log.d("Interactor", "🏆 ТОП РЕЗУЛЬТАТЫ ПОИСКА:")
-                        relevantFilms.take(5).forEachIndexed { index, film ->
-                            val relevanceScore = SearchEngine.calculateRelevanceScore(film, normalizedQuery)
-                            Log.d("Interactor", "   ${index + 1}. '${film.title}' - релевантность: $relevanceScore")
-                            Log.d("Interactor", "      - ${SearchEngine.debugFilmSearch(film, normalizedQuery)}")
-                        }
-                    } else {
-                        Log.w("Interactor", "⚠️ Умный поиск не нашел релевантных фильмов")
-
-                        // Дополнительная диагностика - покажем почему фильмы не подошли
-                        if (films.isNotEmpty()) {
-                            Log.d("Interactor", "🔎 ДИАГНОСТИКА ПОЧЕМУ ФИЛЬМЫ НЕ ПОДОШЛИ:")
-                            films.take(3).forEach { film ->
-                                val debugInfo = SearchEngine.debugFilmSearch(film, normalizedQuery)
-                                Log.d("Interactor", "   - '${film.title}': $debugInfo")
-                            }
-                        }
-                    }
 
                     callback.onSuccess(relevantFilms, body?.page ?: page, body?.pages ?: 1)
                 } else {
@@ -152,42 +99,78 @@ class Interactor @Inject constructor(
             }
 
             override fun onFailure(call: Call<KinopoiskResponse>, t: Throwable) {
-                Log.e("Interactor", "❌ Сетевая ошибка поиска: ${t.message}")
-                callback.onFailure("Сетевая ошибка: ${t.message}")
+                Log.e("Interactor", "Ошибка поиска: ${t.message}")
+                callback.onFailure("Ошибка поиска: ${t.message}")
             }
         })
     }
 
-    // Улучшенная обработка ошибок API
+    // Методы для разных категорий
+    private fun getPopularFilmsCall(page: Int): Call<KinopoiskResponse> {
+        return kinopoiskApi.getFilmsByCategory(
+            apiKey = apiKey,
+            page = page,
+            year = "2020-2024",
+            rating = "6-10",
+            sortField = "votes.kp",
+            sortType = "-1",
+            type = "movie" // Только фильмы
+        )
+    }
+
+    private fun getTopRatedFilmsCall(page: Int): Call<KinopoiskResponse> {
+        return kinopoiskApi.getFilmsByCategory(
+            apiKey = apiKey,
+            page = page,
+            year = "2010-2024",
+            rating = "7-10",
+            sortField = "rating.kp",
+            sortType = "-1",
+            type = "movie"
+        )
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun getRecentFilmsCall(page: Int): Call<KinopoiskResponse> {
+        val currentYear = java.time.Year.now().value
+        return kinopoiskApi.getFilmsByCategory(
+            apiKey = apiKey,
+            page = page,
+            year = "${currentYear - 1}-$currentYear",
+            rating = "5-10",
+            sortField = "year",
+            sortType = "-1",
+            type = "movie"
+        )
+    }
+
+    // Новая категория - боевики
+    private fun getActionFilmsCall(page: Int): Call<KinopoiskResponse> {
+        return kinopoiskApi.getFilmsByCategory(
+            apiKey = apiKey,
+            page = page,
+            year = "2010-2024",
+            rating = "6-10",
+            sortField = "votes.kp",
+            sortType = "-1",
+            type = "movie",
+
+        )
+    }
+
     private fun handleApiError(response: Response<*>, callback: ApiCallback) {
         val errorCode = response.code()
         val errorMessage = when (errorCode) {
-            400 -> "Неверный запрос к API (400)"
-            401 -> "Неверный API ключ (401)"
-            403 -> "Доступ запрещен (403)"
-            429 -> "Слишком много запросов (429). Попробуйте позже."
-            500 -> "Ошибка сервера Кинопоиска (500)"
-            502 -> "Проблемы с соединением (502)"
-            503 -> "Сервис временно недоступен (503)"
+            400 -> "Неверный запрос к API"
+            401 -> "Неверный API ключ"
+            403 -> "Доступ запрещен"
+            429 -> "Слишком много запросов. Попробуйте позже."
+            500 -> "Ошибка сервера Кинопоиска"
             else -> "Ошибка API: $errorCode"
         }
-
-        Log.e("Interactor", "❌ Ошибка API: $errorMessage")
-
-        // Дополнительная информация для отладки
-        try {
-            val errorBody = response.errorBody()?.string()
-            if (!errorBody.isNullOrEmpty()) {
-                Log.e("Interactor", "❌ Тело ошибки: $errorBody")
-            }
-        } catch (e: Exception) {
-            Log.e("Interactor", "❌ Не удалось прочитать тело ошибки")
-        }
-
         callback.onFailure(errorMessage)
     }
 
-    // Дополнительный метод для быстрого поиска (без пагинации)
     fun quickSearch(query: String, callback: (List<Film>) -> Unit) {
         val normalizedQuery = query.trim()
 
@@ -196,16 +179,16 @@ class Interactor @Inject constructor(
             return
         }
 
-        Log.d("Interactor", "⚡ Быстрый поиск: '$normalizedQuery'")
-
         RetrofitClient.kinopoiskApi.searchFilmsOptimized(
             apiKey = RetrofitClient.getApiKey(),
             name = normalizedQuery,
             alternativeName = normalizedQuery,
             enName = normalizedQuery,
             page = 1,
-            limit = 10 // Ограничиваем для быстрого ответа
+            limit = 10,
+            type = "movie" // Только фильмы
         ).enqueue(object : Callback<KinopoiskResponse> {
+            @RequiresApi(Build.VERSION_CODES.O)
             override fun onResponse(
                 call: Call<KinopoiskResponse>,
                 response: Response<KinopoiskResponse>
@@ -214,17 +197,13 @@ class Interactor @Inject constructor(
                     val body = response.body()
                     val films = Converter.convertApiListToDtoList(body?.docs)
                     val relevantFilms = SearchEngine.smartFilmSearch(films, normalizedQuery)
-
-                    Log.d("Interactor", "⚡ Быстрый поиск нашел: ${relevantFilms.size} фильмов")
                     callback(relevantFilms)
                 } else {
-                    Log.e("Interactor", "❌ Ошибка быстрого поиска: ${response.code()}")
                     callback(emptyList())
                 }
             }
 
             override fun onFailure(call: Call<KinopoiskResponse>, t: Throwable) {
-                Log.e("Interactor", "❌ Сетевая ошибка быстрого поиска: ${t.message}")
                 callback(emptyList())
             }
         })
