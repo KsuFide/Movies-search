@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/settings_fragment_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:visibility="invisible"
+    tools:visibility="visible"
+    android:background="@drawable/background_settings"
+    tools:context=".view.fragments.SettingsFragment">
+
+    <RadioGroup
+        android:id="@+id/radio_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.AppCompat.Title"
+            android:textColor="@android:color/white"
+            android:layout_margin="8dp"
+            android:text="Подборка на главном экране:"/>
+
+        <RadioButton
+            android:id="@+id/radio_popular"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:textColor="@android:color/white"
+            android:text="Популярные"/>
+        <RadioButton
+            android:id="@+id/radio_top_rated"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:textColor="@android:color/white"
+            android:text="Высокий рейтинг"/>
+        <RadioButton
+            android:id="@+id/radio_recent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:textColor="@android:color/white"
+            android:text="Новинки"/>
+
+    </RadioGroup>
+</FrameLayout>

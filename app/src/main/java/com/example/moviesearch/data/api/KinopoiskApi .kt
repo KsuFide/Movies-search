@@ -7,6 +7,24 @@ import retrofit2.http.Header
 import retrofit2.http.Query
 
 interface KinopoiskApi {
+
+    // Универсальный метод для получения фильмов по категории
+    @GET("v1.4/movie")
+    fun getFilmsByCategory(
+        @Header("X-API-KEY") apiKey: String,
+        @Query("page") page: Int = 1,
+        @Query("limit") limit: Int = 20,
+        @Query("selectFields") selectFields: List<String> = listOf(
+            "id", "name", "alternativeName", "year", "description", "rating", "poster", "genres"
+        ),
+        @Query("type") type: String = "movie",
+        @Query("year") year: String? = null,
+        @Query("rating.kp") rating: String? = null,
+        @Query("sortField") sortField: String? = null,
+        @Query("sortType") sortType: String? = null,
+        @Query("genres.name") genres: List<String>? = null // Фильтрация по жанрам
+    ): Call<KinopoiskResponse>
+
     // Метод для популярных фильмов
     @GET("v1.4/movie")
     fun getPopularFilms(

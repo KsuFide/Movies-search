@@ -27,5 +27,11 @@
         android:title="@string/btn_menu4"
         app:showAsAction="withText" />
 
+    <item
+        android:id="@+id/settings"
+        android:icon="@drawable/ic_settings"
+        android:title="Настройки"
+        app:showAsAction="withText" />
+
 
 </menu>
