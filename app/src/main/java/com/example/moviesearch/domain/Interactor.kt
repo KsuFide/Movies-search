@@ -1,5 +1,6 @@
 package com.example.moviesearch.domain
 
+import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -33,14 +34,14 @@ class Interactor @Inject constructor(
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun getFilmsFromApi(page: Int, callback: ApiCallback) {
+    fun getFilmsFromApi(page: Int, callback: ApiCallback, context: Context) {
         val category = getDefaultCategoryFromPreferences()
 
         val call = when (category) {
             "popular" -> getPopularFilmsCall(page)
             "top_rated" -> getTopRatedFilmsCall(page)
             "recent" -> getRecentFilmsCall(page)
-            "action" -> getActionFilmsCall(page) // Новая категория
+            "action" -> getActionFilmsCall(page)
             else -> getPopularFilmsCall(page)
         }
 
@@ -49,20 +50,39 @@ class Interactor @Inject constructor(
                 if (response.isSuccessful) {
                     val body = response.body()
                     val films = Converter.convertApiListToDtoList(body?.docs)
+
+                    // Сохраняем фильмы в БД при успешном ответе
+                    repo.putToDb(films, context)
+
                     callback.onSuccess(films, body?.page ?: page, body?.pages ?: 1)
                 } else {
-                    handleApiError(response, callback)
+                    // При ошибке API пытаемся загрузить из БД
+                    val cachedFilms = repo.getAllFromDB(context)
+                    if (cachedFilms.isNotEmpty()) {
+                        Log.d("Interactor", "📦 Используем кэшированные данные: ${cachedFilms.size} фильмов")
+                        callback.onSuccess(cachedFilms, 1, 1)
+                    } else {
+                        handleApiError(response, callback)
+                    }
                 }
             }
 
             override fun onFailure(call: Call<KinopoiskResponse>, t: Throwable) {
                 Log.e("Interactor", "Сетевая ошибка: ${t.message}")
-                callback.onFailure("Сетевая ошибка: ${t.message}")
+
+                // При сетевой ошибке загружаем из БД
+                val cachedFilms = repo.getAllFromDB(context)
+                if (cachedFilms.isNotEmpty()) {
+                    Log.d("Interactor", "📦 Используем кэшированные данные из-за сетевой ошибки: ${cachedFilms.size} фильмов")
+                    callback.onSuccess(cachedFilms, 1, 1)
+                } else {
+                    callback.onFailure("Сетевая ошибка: ${t.message}")
+                }
             }
         })
     }
 
-    fun searchFilms(query: String, page: Int, callback: ApiCallback) {
+    fun searchFilms(query: String, page: Int, callback: ApiCallback, context: Context) {
         val normalizedQuery = query.trim()
 
         if (normalizedQuery.length < 2) {
@@ -70,14 +90,13 @@ class Interactor @Inject constructor(
             return
         }
 
-        // Улучшенный поиск только фильмов с жанрами
         RetrofitClient.kinopoiskApi.searchFilmsOptimized(
             apiKey = RetrofitClient.getApiKey(),
             name = normalizedQuery,
             alternativeName = normalizedQuery,
             enName = normalizedQuery,
             page = page,
-            type = "movie" // Гарантируем поиск только фильмов
+            type = "movie"
         ).enqueue(object : Callback<KinopoiskResponse> {
             @RequiresApi(Build.VERSION_CODES.O)
             override fun onResponse(
@@ -88,24 +107,96 @@ class Interactor @Inject constructor(
                     val body = response.body()
                     val rawFilms = body?.docs ?: emptyList()
 
-                    // Фильтруем только фильмы (исключаем сериалы, аниме и т.д.)
                     val films = Converter.convertApiListToDtoList(rawFilms)
                     val relevantFilms = SearchEngine.smartFilmSearch(films, normalizedQuery)
 
+                    // Сохраняем найденные фильмы в БД
+                    repo.putToDb(relevantFilms, context)
+
                     callback.onSuccess(relevantFilms, body?.page ?: page, body?.pages ?: 1)
                 } else {
-                    handleApiError(response, callback)
+                    // При ошибке поиска пытаемся найти в кэше
+                    val cachedFilms = repo.getAllFromDB(context)
+                    val searchResults = cachedFilms.filter { film ->
+                        film.title.contains(normalizedQuery, ignoreCase = true) ||
+                                film.originalTitle?.contains(normalizedQuery, ignoreCase = true) == true ||
+                                film.alternativeName?.contains(normalizedQuery, ignoreCase = true) == true
+                    }
+
+                    if (searchResults.isNotEmpty()) {
+                        Log.d("Interactor", "📦 Используем кэшированные результаты поиска: ${searchResults.size} фильмов")
+                        callback.onSuccess(searchResults, 1, 1)
+                    } else {
+                        handleApiError(response, callback)
+                    }
                 }
             }
 
             override fun onFailure(call: Call<KinopoiskResponse>, t: Throwable) {
                 Log.e("Interactor", "Ошибка поиска: ${t.message}")
-                callback.onFailure("Ошибка поиска: ${t.message}")
+
+                // При сетевой ошибке поиска ищем в кэше
+                val cachedFilms = repo.getAllFromDB(context)
+                val searchResults = cachedFilms.filter { film ->
+                    film.title.contains(normalizedQuery, ignoreCase = true) ||
+                            film.originalTitle?.contains(normalizedQuery, ignoreCase = true) == true ||
+                            film.alternativeName?.contains(normalizedQuery, ignoreCase = true) == true
+                }
+
+                if (searchResults.isNotEmpty()) {
+                    Log.d("Interactor", "📦 Используем кэшированные результаты поиска: ${searchResults.size} фильмов")
+                    callback.onSuccess(searchResults, 1, 1)
+                } else {
+                    callback.onFailure("Ошибка поиска: ${t.message}")
+                }
             }
         })
     }
 
-    // Методы для разных категорий
+    // Обновляем фильм в БД
+    fun updateFilmInDb(film: Film, context: Context) {
+        repo.updateFilmInDb(film, context)
+    }
+
+    // Удаляем фильм из БД по ID
+    fun deleteFilmFromDb(filmId: Int, context: Context) {
+        repo.deleteFilmFromDb(filmId, context)
+    }
+
+    // Удаляем все фильмы из БД
+    fun deleteAllFilmsFromDb(context: Context) {
+        repo.deleteAllFilmsFromDb(context)
+    }
+
+    // Получаем фильмы по диапазону годов
+    fun getFilmsByYearRange(startYear: Int, endYear: Int, context: Context): List<Film> {
+        return repo.getFilmsByYearRange(startYear, endYear, context)
+    }
+
+    // Получаем фильмы по названию (поиск в БД)
+    fun getFilmsByTitle(title: String, context: Context): List<Film> {
+        return repo.getFilmsByTitle(title, context)
+    }
+
+
+    // Получаем количество фильмов в БД
+    fun getFilmsCount(context: Context): Int {
+        return repo.getFilmsCount(context)
+    }
+
+    // Получаем фильмы по жанру из БД
+    fun getFilmsByGenre(genre: String, context: Context): List<Film> = repo.getFilmsByGenre(genre, context)
+
+    // Получаем фильмы с высоким рейтингом из БД
+    fun getHighRatedFilms(minRating: Double = 7.0, context: Context): List<Film> = repo.getHighRatedFilms(minRating, context)
+
+    // Получаем последние фильмы из БД
+    fun getRecentFilmsFromDB(limit: Int = 20, context: Context): List<Film> = repo.getRecentFilms(limit, context)
+
+    // Новый метод для получения фильмов из БД
+    fun getFilmsFromDB(context: Context): List<Film> = repo.getAllFromDB(context)
+
+    // Остальные методы остаются без изменений...
     private fun getPopularFilmsCall(page: Int): Call<KinopoiskResponse> {
         return kinopoiskApi.getFilmsByCategory(
             apiKey = apiKey,
@@ -114,7 +205,7 @@ class Interactor @Inject constructor(
             rating = "6-10",
             sortField = "votes.kp",
             sortType = "-1",
-            type = "movie" // Только фильмы
+            type = "movie"
         )
     }
 
@@ -144,7 +235,6 @@ class Interactor @Inject constructor(
         )
     }
 
-    // Новая категория - боевики
     private fun getActionFilmsCall(page: Int): Call<KinopoiskResponse> {
         return kinopoiskApi.getFilmsByCategory(
             apiKey = apiKey,
@@ -154,7 +244,7 @@ class Interactor @Inject constructor(
             sortField = "votes.kp",
             sortType = "-1",
             type = "movie",
-
+            genres = listOf("боевик")
         )
     }
 
@@ -171,7 +261,7 @@ class Interactor @Inject constructor(
         callback.onFailure(errorMessage)
     }
 
-    fun quickSearch(query: String, callback: (List<Film>) -> Unit) {
+    fun quickSearch(query: String, callback: (List<Film>) -> Unit, context: Context) {
         val normalizedQuery = query.trim()
 
         if (normalizedQuery.length < 2) {
@@ -186,7 +276,7 @@ class Interactor @Inject constructor(
             enName = normalizedQuery,
             page = 1,
             limit = 10,
-            type = "movie" // Только фильмы
+            type = "movie"
         ).enqueue(object : Callback<KinopoiskResponse> {
             @RequiresApi(Build.VERSION_CODES.O)
             override fun onResponse(
@@ -197,14 +287,32 @@ class Interactor @Inject constructor(
                     val body = response.body()
                     val films = Converter.convertApiListToDtoList(body?.docs)
                     val relevantFilms = SearchEngine.smartFilmSearch(films, normalizedQuery)
+
+                    // Сохраняем результаты быстрого поиска в БД
+                    repo.putToDb(relevantFilms, context)
+
                     callback(relevantFilms)
                 } else {
-                    callback(emptyList())
+                    // При ошибке ищем в кэше
+                    val cachedFilms = repo.getAllFromDB(context)
+                    val searchResults = cachedFilms.filter { film ->
+                        film.title.contains(normalizedQuery, ignoreCase = true) ||
+                                film.originalTitle?.contains(normalizedQuery, ignoreCase = true) == true ||
+                                film.alternativeName?.contains(normalizedQuery, ignoreCase = true) == true
+                    }
+                    callback(searchResults)
                 }
             }
 
             override fun onFailure(call: Call<KinopoiskResponse>, t: Throwable) {
-                callback(emptyList())
+                // При сетевой ошибке ищем в кэше
+                val cachedFilms = repo.getAllFromDB(context)
+                val searchResults = cachedFilms.filter { film ->
+                    film.title.contains(normalizedQuery, ignoreCase = true) ||
+                            film.originalTitle?.contains(normalizedQuery, ignoreCase = true) == true ||
+                            film.alternativeName?.contains(normalizedQuery, ignoreCase = true) == true
+                }
+                callback(searchResults)
             }
         })
     }

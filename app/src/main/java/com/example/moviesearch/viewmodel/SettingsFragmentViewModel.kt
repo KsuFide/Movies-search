@@ -1,5 +1,7 @@
 package com.example.moviesearch.viewmodel
 
+import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.MutableLiveData
 import com.example.moviesearch.domain.Interactor
@@ -14,19 +16,43 @@ class SettingsFragmentViewModel @Inject constructor(
     val categoryPropertyLiveData: MutableLiveData<String> = MutableLiveData()
 
     init {
-        // Получаем категорию при инициализации
         getCategoryProperty()
     }
 
     private fun getCategoryProperty() {
-        // Кладем категорию в LiveData
         categoryPropertyLiveData.value = interactor.getDefaultCategoryFromPreferences()
     }
 
     fun putCategoryProperty(category: String) {
-        // Сохраняем в настройки
         interactor.saveDefaultCategoryToPreferences(category)
-        // И сразу забираем, чтобы сохранить состояние в модели
         getCategoryProperty()
+    }
+
+    // Очистка кэша
+    fun clearCache(context: Context): Boolean {
+        return try {
+            interactor.deleteAllFilmsFromDb(context)
+            true
+        } catch (e: Exception) {
+            Log.e("SettingsViewModel", "Ошибка при очистке кэша: ${e.message}", e)
+            false
+        }
+    }
+
+    // Получение статистики кэша
+    fun getCacheStats(context: Context): String {
+        return try {
+            val count = interactor.getFilmsCount(context)
+            "В кэше: $count фильмов"
+        } catch (e: Exception) {
+            Log.e("SettingsViewModel", "Ошибка при получении статистики: ${e.message}", e)
+            "Ошибка загрузки статистики"
+        }
+    }
+
+    companion object {
+        const val POPULAR_CATEGORY = "popular"
+        const val TOP_RATED_CATEGORY = "top_rated"
+        const val RECENT_CATEGORY = "recent"
     }
 }

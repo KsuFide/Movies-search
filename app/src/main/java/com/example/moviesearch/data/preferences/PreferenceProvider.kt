@@ -2,10 +2,14 @@ package com.example.moviesearch.data.preferences
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.core.content.edit
 import android.util.Log
+import androidx.core.content.edit
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class PreferenceProvider(context: Context) {
+@Singleton
+class PreferenceProvider @Inject constructor(@ApplicationContext context: Context) {
     private val appContext = context.applicationContext
     private val preference: SharedPreferences = appContext.getSharedPreferences("movie_settings", Context.MODE_PRIVATE)
 
@@ -28,10 +32,8 @@ class PreferenceProvider(context: Context) {
         Log.d("PreferenceProvider", "💾 Сохраняем категорию: $category")
         preference.edit {
             putString(KEY_DEFAULT_CATEGORY, category)
-            commit() // Используем commit для немедленного сохранения
         }
 
-        // Проверим сохранение
         val saved = preference.getString(KEY_DEFAULT_CATEGORY, "ERROR")
         Log.d("PreferenceProvider", "✅ Проверка сохранения: $saved")
     }
