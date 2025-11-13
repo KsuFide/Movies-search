@@ -39,17 +39,14 @@ class SettingsFragment : Fragment() {
         viewModel.categoryPropertyLiveData.observe(viewLifecycleOwner) { category ->
             Log.d("SettingsFragment", "📊 Текущая категория: $category")
             when(category) {
-                POPULAR_CATEGORY -> {
+                SettingsFragmentViewModel.POPULAR_CATEGORY -> {
                     binding.radioGroup.check(R.id.radio_popular)
-                    showCategoryDescription("Популярные фильмы последних лет")
                 }
-                TOP_RATED_CATEGORY -> {
+                SettingsFragmentViewModel.TOP_RATED_CATEGORY -> {
                     binding.radioGroup.check(R.id.radio_top_rated)
-                    showCategoryDescription("Фильмы с высоким рейтингом")
                 }
-                RECENT_CATEGORY -> {
+                SettingsFragmentViewModel.RECENT_CATEGORY -> {
                     binding.radioGroup.check(R.id.radio_recent)
-                    showCategoryDescription("Самые новые фильмы")
                 }
             }
         }
@@ -58,42 +55,44 @@ class SettingsFragment : Fragment() {
         binding.radioGroup.setOnCheckedChangeListener { group, checkedId ->
             when(checkedId) {
                 R.id.radio_popular -> {
-                    Log.d("SettingsFragment", "🔄 Устанавливаем категорию: популярные")
-                    viewModel.putCategoryProperty(POPULAR_CATEGORY)
+                    viewModel.putCategoryProperty(SettingsFragmentViewModel.POPULAR_CATEGORY)
                     showToast("Установлена категория: Популярные")
                 }
                 R.id.radio_top_rated -> {
-                    Log.d("SettingsFragment", "🔄 Устанавливаем категорию: высокий рейтинг")
-                    viewModel.putCategoryProperty(TOP_RATED_CATEGORY)
+                    viewModel.putCategoryProperty(SettingsFragmentViewModel.TOP_RATED_CATEGORY)
                     showToast("Установлена категория: Высокий рейтинг")
                 }
                 R.id.radio_recent -> {
-                    Log.d("SettingsFragment", "🔄 Устанавливаем категорию: новинки")
-                    viewModel.putCategoryProperty(RECENT_CATEGORY)
+                    viewModel.putCategoryProperty(SettingsFragmentViewModel.RECENT_CATEGORY)
                     showToast("Установлена категория: Новинки")
                 }
             }
         }
-    }
 
-    private fun showCategoryDescription(description: String) {
-        // Можно добавить отображение описания
-        Log.d("SettingsFragment", "📝 Описание категории: $description")
+        // Кнопка для очистки кэша
+        binding.clearCacheButton.setOnClickListener {
+            val success = viewModel.clearCache(requireContext())
+            if (success) {
+                showToast("Кэш успешно очищен")
+            } else {
+                showToast("Ошибка при очистке кэша")
+            }
+        }
+
+        // Кнопка для просмотра статистики кэша
+        binding.cacheStatsButton.setOnClickListener {
+            val cacheStats = viewModel.getCacheStats(requireContext())
+            showToast(cacheStats)
+        }
     }
 
     private fun showToast(message: String) {
         Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
-        Log.d("SettingsFragment", "🔔 Toast: $message")
+        Log.d("SettingsFragment", "Toast: $message")
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    companion object {
-        const val POPULAR_CATEGORY = "popular"
-        const val TOP_RATED_CATEGORY = "top_rated"
-        const val RECENT_CATEGORY = "recent"
     }
 }

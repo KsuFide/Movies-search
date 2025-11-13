@@ -192,7 +192,7 @@ class HomeFragment : Fragment() {
                 override fun onFailure(errorMessage: String?) {
                     handleFailure(errorMessage)
                 }
-            })
+            }, requireContext())
         } else {
             val category = interactor.getDefaultCategoryFromPreferences()
             Log.d("HomeFragment", "🎬 Загружаем фильмы категории: $category")
@@ -204,7 +204,7 @@ class HomeFragment : Fragment() {
                 override fun onFailure(errorMessage: String?) {
                     handleFailure(errorMessage)
                 }
-            })
+            }, requireContext())
         }
     }
 
@@ -239,6 +239,19 @@ class HomeFragment : Fragment() {
         binding.swipeRefreshLayout.isRefreshing = false
 
         Log.e("HomeFragment", "Ошибка загрузки: $errorMessage")
+
+        // Показываем уведомление об использовании кэшированных данных
+        if (allFilms.isEmpty()) {
+            val cachedFilms = interactor.getFilmsFromDB(requireContext())
+            if (cachedFilms.isNotEmpty()) {
+                allFilms.addAll(cachedFilms)
+                filmsAdapter.submitList(allFilms.toList())
+                binding.mainRecycler.visibility = View.VISIBLE
+                Toast.makeText(requireContext(), "📦 Показаны кэшированные данные", Toast.LENGTH_LONG).show()
+                return
+            }
+        }
+
         binding.mainRecycler.visibility = View.VISIBLE
         Toast.makeText(requireContext(), "Ошибка загрузки: $errorMessage", Toast.LENGTH_SHORT).show()
     }
@@ -280,9 +293,9 @@ class HomeFragment : Fragment() {
         }
 
         if (isSearchMode && currentSearchQuery.isNotEmpty()) {
-            interactor.searchFilms(currentSearchQuery, currentPage, callback)
+            interactor.searchFilms(currentSearchQuery, currentPage, callback, requireContext())
         } else {
-            interactor.getFilmsFromApi(currentPage, callback)
+            interactor.getFilmsFromApi(currentPage, callback, requireContext())
         }
     }
 
