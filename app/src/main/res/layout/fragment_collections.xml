@@ -18,11 +18,33 @@
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         tools:listitem="@layout/film_item" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="Список 'Подборки фильмов' пуст"
-        android:textSize="24sp" />
+    <!-- Состояние пустого списка -->
+    <LinearLayout
+        android:id="@+id/empty_state"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="32dp"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_marginBottom="24dp"
+            android:src="@drawable/ic_selection"
+            android:tint="#666666" />
+
+        <TextView
+            android:id="@+id/empty_state_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Здесь появятся фильмы, которые вы посмотрели"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:textColor="#666666"
+            android:textSize="16sp" />
+
+    </LinearLayout>
 
 </FrameLayout>

@@ -1,11 +1,13 @@
 package com.example.moviesearch.view.fragments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.moviesearch.data.api.Database
 import com.example.moviesearch.view.adapters.FilmListRecyclerAdapter
 import com.example.moviesearch.view.MainActivity
 import com.example.moviesearch.view.adapters.TopSpacingItemDecoration
@@ -29,24 +31,40 @@ class CollectionsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Запускаем анимацию circular reveal
         AnimationHelper.performFragmentCircularRevealAnimation(binding.homeFragmentRoot, requireActivity(), 4)
-
         binding.homeFragmentRoot.visibility = View.VISIBLE
 
         filmsAdapter = FilmListRecyclerAdapter { film ->
             (activity as? MainActivity)?.launchDetailsActivity(film)
         }
 
-        // Настройка RecyclerView
         binding.collectionsRecycler.apply {
             adapter = filmsAdapter
             layoutManager = LinearLayoutManager(requireContext())
             addItemDecoration(TopSpacingItemDecoration(8))
         }
 
-        // Загружаем все фильмы для подборок (можно изменить логику)
+        loadFilms()
+    }
 
+    private fun loadFilms() {
+        // Теперь показываем только просмотренные фильмы
+        val films = Database.getWatchedFilms()
+        filmsAdapter.submitList(films)
+
+        if (films.isEmpty()) {
+            binding.emptyState.visibility = View.VISIBLE
+            binding.collectionsRecycler.visibility = View.GONE
+        } else {
+            binding.emptyState.visibility = View.GONE
+            binding.collectionsRecycler.visibility = View.VISIBLE
+            Log.d("CollectionsFragment", "📁 Загружено просмотренных фильмов: ${films.size}")
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadFilms()
     }
 
     override fun onDestroyView() {

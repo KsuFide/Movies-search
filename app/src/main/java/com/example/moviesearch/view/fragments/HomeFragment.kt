@@ -7,10 +7,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.moviesearch.data.api.Database
 import com.example.moviesearch.databinding.FragmentHomeBinding
-import com.example.moviesearch.domain.Film
+import com.example.moviesearch.data.entity.Film
 import com.example.moviesearch.domain.Interactor
 import com.example.moviesearch.utils.AnimationHelper
 import com.example.moviesearch.utils.PaginationScrollListener
@@ -18,7 +19,9 @@ import com.example.moviesearch.view.MainActivity
 import com.example.moviesearch.view.adapters.FilmListRecyclerAdapter
 import com.example.moviesearch.view.adapters.TopSpacingItemDecoration
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.collections.toList
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
@@ -44,6 +47,9 @@ class HomeFragment : Fragment() {
 
     // Добавляем отслеживание текущей категории
     private var currentCategory = ""
+
+    // ЗАЩИТА ОТ МНОЖЕСТВЕННЫХ ОБНОВЛЕНИЙ
+    private var isRefreshing = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -101,12 +107,18 @@ class HomeFragment : Fragment() {
     }
 
     private fun checkCategoryChange() {
+        if (isRefreshing) {
+            Log.d("HomeFragment", "⏸️ Игнорируем смену категории - уже идет обновление")
+            return
+        }
+
         val newCategory = interactor.getDefaultCategoryFromPreferences()
         Log.d("HomeFragment", "🔍 Проверка категории: текущая=$currentCategory, новая=$newCategory")
 
         if (newCategory != currentCategory && !isSearchMode) {
             Log.d("HomeFragment", "🔄 Категория изменилась! Перезагружаем данные")
             currentCategory = newCategory
+            isRefreshing = true
             loadFirstPage()
         } else {
             Log.d("HomeFragment", "ℹ️ Категория не изменилась или режим поиска")
@@ -115,6 +127,10 @@ class HomeFragment : Fragment() {
 
     private fun setupSwipeRefresh() {
         binding.swipeRefreshLayout.setOnRefreshListener {
+            if (isRefreshing) {
+                binding.swipeRefreshLayout.isRefreshing = false
+                return@setOnRefreshListener
+            }
             // Обновляем данные
             loadFirstPage()
         }
@@ -179,6 +195,7 @@ class HomeFragment : Fragment() {
         currentPage = 1
         allFilms.clear()
         isLoading = true
+        isRefreshing = true
         binding.mainRecycler.visibility = View.GONE
         binding.swipeRefreshLayout.isRefreshing = true
 
@@ -192,7 +209,7 @@ class HomeFragment : Fragment() {
                 override fun onFailure(errorMessage: String?) {
                     handleFailure(errorMessage)
                 }
-            }, requireContext())
+            })
         } else {
             val category = interactor.getDefaultCategoryFromPreferences()
             Log.d("HomeFragment", "🎬 Загружаем фильмы категории: $category")
@@ -204,12 +221,13 @@ class HomeFragment : Fragment() {
                 override fun onFailure(errorMessage: String?) {
                     handleFailure(errorMessage)
                 }
-            }, requireContext())
+            })
         }
     }
 
     private fun handleSuccess(films: List<Film>, currentPage: Int, totalPages: Int) {
         isLoading = false
+        isRefreshing = false // СБРАСЫВАЕМ ФЛАГ
         paginationScrollListener.setLoading(false)
         binding.swipeRefreshLayout.isRefreshing = false
 
@@ -230,34 +248,39 @@ class HomeFragment : Fragment() {
         binding.mainRecycler.visibility = View.VISIBLE
 
         val mode = if (isSearchMode) "поиска" else "категории ${interactor.getDefaultCategoryFromPreferences()}"
-        Log.d("HomeFragment", "Загружена страница $currentPage из $totalPages ($mode), фильмов: ${allFilms.size}")
+        Log.d("HomeFragment", "✅ Загружена страница $currentPage из $totalPages ($mode), фильмов: ${allFilms.size}")
     }
 
     private fun handleFailure(errorMessage: String?) {
         isLoading = false
+        isRefreshing = false // СБРАСЫВАЕМ ФЛАГ
         paginationScrollListener.setLoading(false)
         binding.swipeRefreshLayout.isRefreshing = false
 
-        Log.e("HomeFragment", "Ошибка загрузки: $errorMessage")
+        Log.e("HomeFragment", "❌ Ошибка загрузки: $errorMessage")
 
         // Показываем уведомление об использовании кэшированных данных
-        if (allFilms.isEmpty()) {
-            val cachedFilms = interactor.getFilmsFromDB(requireContext())
-            if (cachedFilms.isNotEmpty()) {
-                allFilms.addAll(cachedFilms)
-                filmsAdapter.submitList(allFilms.toList())
-                binding.mainRecycler.visibility = View.VISIBLE
-                Toast.makeText(requireContext(), "📦 Показаны кэшированные данные", Toast.LENGTH_LONG).show()
-                return
+        lifecycleScope.launch {
+            try {
+                val cachedFilms = interactor.getFilmsFromDB()
+                if (cachedFilms.isNotEmpty()) {
+                    allFilms.addAll(cachedFilms)
+                    filmsAdapter.submitList(allFilms.toList())
+                    binding.mainRecycler.visibility = View.VISIBLE
+                    Toast.makeText(requireContext(), "📦 Показаны кэшированные данные", Toast.LENGTH_LONG).show()
+                    return@launch
+                }
+            } catch (e: Exception) {
+                Log.e("HomeFragment", "Ошибка при загрузке кэшированных данных: ${e.message}")
             }
-        }
 
-        binding.mainRecycler.visibility = View.VISIBLE
-        Toast.makeText(requireContext(), "Ошибка загрузки: $errorMessage", Toast.LENGTH_SHORT).show()
+            binding.mainRecycler.visibility = View.VISIBLE
+            Toast.makeText(requireContext(), "Ошибка загрузки: $errorMessage", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun loadNextPage() {
-        if (isLoading || currentPage >= totalPages) return
+        if (isLoading || currentPage >= totalPages || isRefreshing) return
 
         isLoading = true
         currentPage++
@@ -293,9 +316,9 @@ class HomeFragment : Fragment() {
         }
 
         if (isSearchMode && currentSearchQuery.isNotEmpty()) {
-            interactor.searchFilms(currentSearchQuery, currentPage, callback, requireContext())
+            interactor.searchFilms(currentSearchQuery, currentPage, callback)
         } else {
-            interactor.getFilmsFromApi(currentPage, callback, requireContext())
+            interactor.getFilmsFromApi(currentPage, callback)
         }
     }
 

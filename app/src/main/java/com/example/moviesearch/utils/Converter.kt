@@ -1,7 +1,7 @@
 package com.example.moviesearch.utils
 
 import com.example.moviesearch.data.dto.KinopoiskFilmDto
-import com.example.moviesearch.domain.Film
+import com.example.moviesearch.data.entity.Film
 
 object Converter {
     fun convertApiListToDtoList(kinopoiskFilms: List<KinopoiskFilmDto>?): List<Film> {

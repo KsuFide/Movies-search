@@ -5,17 +5,17 @@ import android.content.res.ColorStateList
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.example.moviesearch.data.api.Database
 import com.example.moviesearch.R
 import com.example.moviesearch.databinding.FragmentDetailsBinding
-import com.example.moviesearch.domain.Film
-import com.google.android.material.shape.CornerFamily
-import com.google.android.material.shape.ShapeAppearanceModel
+import com.example.moviesearch.data.entity.Film
 import com.google.android.material.snackbar.Snackbar
-import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-@AndroidEntryPoint
 class DetailsActivity : AppCompatActivity() {
 
     private lateinit var binding: FragmentDetailsBinding
@@ -31,19 +31,24 @@ class DetailsActivity : AppCompatActivity() {
             return
         }
 
-        // Скругляем иконку fab
-        binding.detailsFab.shapeAppearanceModel = ShapeAppearanceModel()
-            .toBuilder()
-            .setAllCorners(CornerFamily.ROUNDED, 100f)
-            .build()
-        binding.detailsFabFavorites.shapeAppearanceModel = ShapeAppearanceModel()
-            .toBuilder()
-            .setAllCorners(CornerFamily.ROUNDED, 100f)
-            .build()
+        // ОТСЛЕЖИВАЕМ ПРОСМОТР ФИЛЬМА в фоне
+        lifecycleScope.launch(Dispatchers.IO) {
+            Database.markAsWatched(film.id)
+        }
 
-        // Настройка элементов интерфейса
+        setupUI()
+    }
+
+    private fun setupUI() {
         with(binding) {
+            // Устанавливаем заголовок - ТОЛЬКО ЭТО, без setSupportActionBar!
             detailsToolbar.title = film.title
+
+            // Настройка кнопки "Назад" в Toolbar
+            detailsToolbar.setNavigationIcon(R.drawable.baseline_arrow_back_24)
+            detailsToolbar.setNavigationOnClickListener {
+                finish()
+            }
 
             // Загрузка изображения через Glide
             Glide.with(this@DetailsActivity)
@@ -55,25 +60,56 @@ class DetailsActivity : AppCompatActivity() {
             detailsDescription.text = film.description ?: "Описание отсутствует"
 
             updateFavoriteButton()
+            updateWatchLaterButton()
 
+            setupClickListeners()
+        }
+    }
+
+    private fun setupClickListeners() {
+        with(binding) {
             // Обработчик клика по кнопке избранного
             detailsFabFavorites.setOnClickListener {
-                val wasFavorite = Database.isFavorite(film.id)
-                Database.toggleFavorite(film.id)
-
-                // Обновляем вид кнопки
-                updateFavoriteButton()
-
-                // Показываем уведомление о действии
-                showSnackbar(
-                    if (Database.isFavorite(film.id)) "Добавлено в избранное" else "Удалено из избранного",
-                    "Отменить",
-                    {
-                        // Действие при отмене - возвращаем предыдущее состояние
-                        Database.toggleFavorite(film.id)
+                lifecycleScope.launch(Dispatchers.IO) {
+                    Database.toggleFavorite(film.id)
+                    withContext(Dispatchers.Main) {
                         updateFavoriteButton()
+                        showSnackbar(
+                            if (Database.isFavorite(film.id)) "Добавлено в избранное" else "Удалено из избранного",
+                            "Отменить",
+                            {
+                                lifecycleScope.launch(Dispatchers.IO) {
+                                    Database.toggleFavorite(film.id)
+                                    withContext(Dispatchers.Main) {
+                                        updateFavoriteButton()
+                                    }
+                                }
+                            }
+                        )
                     }
-                )
+                }
+            }
+
+            // Обработчик кнопки "Посмотреть позже"
+            detailsFabWatchLater.setOnClickListener {
+                lifecycleScope.launch(Dispatchers.IO) {
+                    Database.toggleWatchLater(film.id)
+                    withContext(Dispatchers.Main) {
+                        updateWatchLaterButton()
+                        showSnackbar(
+                            if (Database.isWatchLater(film.id)) "Добавлено в 'Посмотреть позже'" else "Удалено из 'Посмотреть позже'",
+                            "Отменить",
+                            {
+                                lifecycleScope.launch(Dispatchers.IO) {
+                                    Database.toggleWatchLater(film.id)
+                                    withContext(Dispatchers.Main) {
+                                        updateWatchLaterButton()
+                                    }
+                                }
+                            }
+                        )
+                    }
+                }
             }
 
             // Обработчик клика по кнопке поделиться
@@ -93,7 +129,6 @@ class DetailsActivity : AppCompatActivity() {
 
     // Метод для обновления вида кнопки избранного
     private fun updateFavoriteButton() {
-        // ИСПРАВЛЕНО: работаем с film.id
         val isFavorite = Database.isFavorite(film.id)
         binding.detailsFabFavorites.setImageResource(
             R.drawable.baseline_favorite_24
@@ -102,6 +137,20 @@ class DetailsActivity : AppCompatActivity() {
             ContextCompat.getColor(
                 this,
                 if (isFavorite) R.color.red else R.color.white
+            )
+        )
+    }
+
+    // Метод: обновление кнопки "Посмотреть позже"
+    private fun updateWatchLaterButton() {
+        val isWatchLater = Database.isWatchLater(film.id)
+        binding.detailsFabWatchLater.setImageResource(
+            R.drawable.baseline_watch_later_24
+        )
+        binding.detailsFabWatchLater.imageTintList = ColorStateList.valueOf(
+            ContextCompat.getColor(
+                this,
+                if (isWatchLater) R.color.orange else R.color.white
             )
         )
     }
