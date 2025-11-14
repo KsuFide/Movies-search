@@ -11,5 +11,7 @@
     <color name="red">#FF0000</color>
     <color name="blue">#03A9F4</color>
     <color name="splash_screen_background">#2C622E</color>
+    <color name="green">#00C303</color>
+    <color name="orange">#FF9800</color>
 
 </resources>

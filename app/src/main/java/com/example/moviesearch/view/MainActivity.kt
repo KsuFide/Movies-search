@@ -12,12 +12,13 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.Fragment
 import com.example.moviesearch.R
 import com.example.moviesearch.databinding.ActivityMainBinding
-import com.example.moviesearch.domain.Film
+import com.example.moviesearch.data.entity.Film
 import com.example.moviesearch.view.fragments.CollectionsFragment
 import com.example.moviesearch.view.fragments.FavoritesFragment
 import com.example.moviesearch.view.fragments.HomeFragment
 import com.example.moviesearch.view.fragments.SettingsFragment
 import com.example.moviesearch.view.fragments.WatchLaterFragment
+
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -50,10 +51,8 @@ class MainActivity : AppCompatActivity() {
         // Находим AppBarLayout по ID
         val appBarLayout = findViewById<View>(R.id.app_bar_layout)
 
-        // СПОСОБ 1: Установка цвета через Color.parseColor (прямой HEX-код)
+        // Установка цвета через Color.parseColor (прямой HEX-код)
         appBarLayout.setBackgroundColor(Color.parseColor("#128A8D"))
-
-
 
         // Обработчик навигации
         binding.bottomNavigation.setOnItemSelectedListener { item ->
@@ -149,12 +148,11 @@ class MainActivity : AppCompatActivity() {
 
     // Запуск экрана деталей фильма
     fun launchDetailsActivity(film: Film) {
-        startActivity(Intent(this, DetailsActivity::class.java).apply {
+        val intent = Intent(this, DetailsActivity::class.java).apply {
             putExtra("film", film)
-        })
+        }
+        startActivity(intent)
     }
-
-
 
     // Анимация иконки при нажатии
     private fun animateIcon(item: MenuItem) {
@@ -165,12 +163,12 @@ class MainActivity : AppCompatActivity() {
             ?.translationYBy(-20f)
             ?.setDuration(500)
             ?.withEndAction {
-                view.animate()
-                    .scaleX(1f)
-                    .scaleY(1f)
-                    .translationYBy(20f)
-                    .setDuration(500)
-                    .start()
+                view?.animate()
+                    ?.scaleX(1f)
+                    ?.scaleY(1f)
+                    ?.translationYBy(20f)
+                    ?.setDuration(500)
+                    ?.start()
             }
             ?.start()
     }

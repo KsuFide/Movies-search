@@ -1,90 +1,94 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/settings_fragment_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:visibility="invisible"
-    tools:visibility="visible"
     android:background="@drawable/background_settings"
-    tools:context=".view.fragments.SettingsFragment">
+    android:fillViewport="true"
+    android:paddingBottom="24dp">
 
-    <ScrollView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="16dp">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp">
 
-        <LinearLayout
+        <!-- Заголовок категорий -->
+        <TextView
+            android:id="@+id/categoryTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="24dp"
+            android:text="Выберите категорию по умолчанию:"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.AppCompat.Title"
-                android:textColor="@android:color/white"
-                android:layout_margin="8dp"
-                android:text="Подборка на главном экране:"/>
+        <!-- Контейнер для радиокнопок -->
+        <RadioGroup
+            android:id="@+id/radioGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="32dp" />
 
-            <RadioGroup
-                android:id="@+id/radio_group"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
+        <!-- Прогресс-бар для индикации смены категории -->
+        <ProgressBar
+            android:id="@+id/categoryChangeProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="24dp"
+            android:visibility="gone" />
 
-                <RadioButton
-                    android:id="@+id/radio_popular"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginEnd="16dp"
-                    android:textColor="@android:color/white"
-                    android:text="Популярные"/>
-                <RadioButton
-                    android:id="@+id/radio_top_rated"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginEnd="16dp"
-                    android:textColor="@android:color/white"
-                    android:text="Высокий рейтинг"/>
-                <RadioButton
-                    android:id="@+id/radio_recent"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginEnd="16dp"
-                    android:textColor="@android:color/white"
-                    android:text="Новинки"/>
-            </RadioGroup>
+        <!-- Разделитель -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="32dp"
+            android:background="#8D6E63" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.AppCompat.Title"
-                android:textColor="@android:color/white"
-                android:layout_marginTop="24dp"
-                android:layout_margin="8dp"
-                android:text="Управление кэшем:"/>
+        <!-- Информация о кэше -->
+        <TextView
+            android:id="@+id/cacheInfoText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Информация о кэше: загрузка..."
+            android:textColor="#F5F5F5"
+            android:textSize="16sp"
+            android:fontFamily="sans-serif" />
 
-            <Button
-                android:id="@+id/clear_cache_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                android:text="Очистить кэш"
-                android:backgroundTint="@color/colorAccent"/>
+        <!-- Количество фильмов -->
+        <TextView
+            android:id="@+id/filmCountText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="32dp"
+            android:text="Фильмов в кэше: 0"
+            android:textColor="#F5F5F5"
+            android:textSize="16sp"
+            android:fontFamily="sans-serif" />
 
-            <Button
-                android:id="@+id/cache_stats_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                android:text="Статистика кэша"
-                android:backgroundTint="@color/colorPrimary"/>
+        <!-- Кнопка очистки кэша -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/clearCacheButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:text="Очистить кэш"
+            app:backgroundTint="#5F4634"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            app:cornerRadius="12dp"
+            android:fontFamily="sans-serif-medium"
+            style="@style/Widget.Material3.Button" />
 
-        </LinearLayout>
-    </ScrollView>
-</FrameLayout>
+    </LinearLayout>
+
+</ScrollView>

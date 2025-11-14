@@ -1,7 +1,7 @@
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.example.moviesearch.domain.Film
+import com.example.moviesearch.data.entity.Film
 
 object SearchEngine {
 
